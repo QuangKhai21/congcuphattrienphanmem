@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Hai cột: avatar + thông tin — dùng trong .row (overview, medical-records, weight, form...) -->
+<th:block th:fragment="asideAndInfo (pet, showBackToHealth)">
+    <div class="col-auto text-center">
+        <th:block th:with="hasAvatar=${(pet.avatarUrl != null and not #strings.isEmpty(pet.avatarUrl)) or (pet.imageUrl != null and not #strings.isEmpty(pet.imageUrl))},
+                     avatarSrc=${(pet.avatarUrl != null and not #strings.isEmpty(pet.avatarUrl)) ? pet.avatarUrl : pet.imageUrl}">
+            <img th:if="${hasAvatar}"
+                 class="pet-health-avatar"
+                 th:src="@{${avatarSrc}}"
+                 th:alt="${pet.name}"
+                 loading="lazy"/>
+            <div th:unless="${hasAvatar}"
+                 class="pet-health-avatar-ph mx-auto"
+                 th:classappend="(${pet.category != null and pet.category.code == 'CAT'}) ? ' pet-health-grad-cat' : ((${pet.category != null and pet.category.code == 'DOG'}) ? ' pet-health-grad-dog' : ' pet-health-grad-default')">
+                <span th:text="${pet.name != null and not #strings.isEmpty(pet.name) ? #strings.substring(pet.name, 0, 1) : '?'}">?</span>
+            </div>
+        </th:block>
+    </div>
+    <div class="col min-width-0">
+        <h4 class="mb-1">
+            <span th:text="${pet.name}">Pet</span>
+            <th:block th:if="${pet.userSpecies != null}">
+                <span class="badge bg-secondary ms-2" th:text="${pet.userSpecies.name}"></span>
+            </th:block>
+            <th:block th:if="${pet.userSpecies == null and pet.category != null}">
+                <span class="badge bg-secondary ms-2" th:text="${pet.category.name}"></span>
+            </th:block>
+        </h4>
+        <p class="text-muted mb-1 small">
+            <i class="bi bi-person"></i> Chủ:
+            <span th:text="${pet.owner?.fullName ?: '-'}">-</span>
+            <th:block th:if="${pet.userSpecies != null}">
+                <span class="ms-2" th:if="${pet.userBreed != null}">
+                    <i class="bi bi-tag"></i> <span th:text="${pet.userBreed.name}"></span>
+                </span>
+            </th:block>
+            <th:block th:if="${pet.userSpecies == null and pet.breed != null}">
+                <span class="ms-2"><i class="bi bi-tag"></i> <span th:text="${pet.breed.name}"></span></span>
+            </th:block>
+        </p>
+        <p class="mb-1">
+            <span class="badge"
+                  th:classappend="${pet.status != null and pet.status.name() == 'ACTIVE'} ? 'bg-success' : 'bg-secondary'">
+                <span th:text="${pet.status != null and pet.status.name() == 'ACTIVE' ? 'Đang nuôi' : (pet.status != null ? pet.status.name() : '')}">—</span>
+            </span>
+            <span th:if="${pet.weight != null and not #strings.isEmpty(pet.weight)}"
+                  class="ms-2 text-muted small">
+                <i class="bi bi-speedometer2"></i> <span th:text="${pet.weight}"></span> kg
+            </span>
+        </p>
+        <p th:if="${showBackToHealth}" class="mb-0 small">
+            <a th:href="@{/pets/{id}/health(id=${pet.id})}" class="text-decoration-none">
+                <i class="bi bi-arrow-left-circle"></i> Về hồ sơ sức khỏe
+            </a>
+        </p>
+    </div>
+</th:block>
+</body>
+</html>

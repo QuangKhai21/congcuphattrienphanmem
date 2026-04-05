@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout(~{::title}, ~{::#page-content}, ~{::#page-scripts})}">
+<head>
+    <title>BS. [[${vet.fullName}]] - Pet Care</title>
+</head>
+<body>
+<div id="page-content" th:fragment="content">
+
+    <!-- Hero profile -->
+    <div class="vp-hero">
+        <div class="container">
+            <a th:href="@{/vet-qa}" class="vp-back text-white-50 text-decoration-none small mb-3 d-inline-block">
+                <i class="bi bi-arrow-left"></i> Quay lại danh sách bác sĩ
+            </a>
+            <div class="vp-hero-inner">
+                <!-- Avatar -->
+                <div class="vp-avatar-wrap">
+                    <img th:if="${vetProfileAvatarUrl != null}"
+                         th:src="${vetProfileAvatarUrl}"
+                         th:data-initial="${avatarUrls.nameInitial(vet.fullName)}"
+                         alt=""
+                         class="vp-avatar-img"
+                         referrerpolicy="no-referrer"
+                         loading="eager"
+                         decoding="async"
+                         onerror="var i=this.dataset.initial||'?';var s=document.createElement('span');s.className='vp-avatar-initials';s.textContent=i;this.replaceWith(s);">
+                    <span th:unless="${vetProfileAvatarUrl != null}"
+                          class="vp-avatar-initials"
+                          th:text="${avatarUrls.nameInitial(vet.fullName)}">B</span>
+                    <span class="vp-online-dot"></span>
+                </div>
+
+                <!-- Info -->
+                <div class="vp-hero-info flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                        <h2 class="vp-name mb-0" th:text="${vet.fullName}">BS. Nguyễn Văn A</h2>
+                        <span class="vp-verified" title="Bác sĩ xác minh">
+                            <i class="bi bi-patch-check-fill"></i>
+                        </span>
+                    </div>
+                    <p class="vp-spec mb-1" th:text="${vet.specialization ?: 'Chuyên khoa tổng hợp'}">Chuyên khoa Thú y</p>
+                    <p class="vp-location mb-0">
+                        <i class="bi bi-geo-alt"></i>
+                        <span th:if="${vet.province != null or vet.city != null}"
+                              th:text="${(vet.city != null ? vet.city : '') + (vet.province != null and vet.city != null ? ', ' : '') + (vet.province != null ? vet.province : '')}">
+                            TP. Hồ Chí Minh
+                        </span>
+                        <span th:if="${vet.province == null and vet.city == null}" class="text-white-50">Chưa cập nhật</span>
+                    </p>
+                </div>
+
+                <!-- CTA -->
+                <div class="vp-cta">
+                    <a th:if="${isOwnProfile}" th:href="@{/vet-qa/edit}"
+                       class="btn vp-btn-chat" sec:authorize="isAuthenticated()">
+                        <i class="bi bi-person-vcard"></i> Thông tin hồ sơ
+                    </a>
+                    <button type="button" class="btn vp-btn-chat" id="vpChatBtn"
+                            th:unless="${isOwnProfile}"
+                            sec:authorize="isAuthenticated()">
+                        <i class="bi bi-chat-dots"></i> Nhắn tin
+                    </button>
+                    <a th:href="@{/login}" class="btn vp-btn-chat" sec:authorize="!isAuthenticated()">
+                        <i class="bi bi-chat-dots"></i> Đăng nhập để chat
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container my-4">
+        <div class="row g-4">
+
+            <!-- ── Left: Info ─────────────────────────────────── -->
+            <div class="col-lg-5">
+                <div class="vp-card mb-4">
+                    <h5 class="vp-card-title"><i class="bi bi-person-vcard"></i> Thông tin cá nhân</h5>
+                    <table class="vp-info-table">
+                        <tr>
+                            <td class="vp-info-label"><i class="bi bi-person me-1"></i> Họ tên</td>
+                            <td th:text="${vet.fullName}">—</td>
+                        </tr>
+                        <tr th:if="${vet.email != null and !vet.email.isEmpty()}">
+                            <td class="vp-info-label"><i class="bi bi-envelope me-1"></i> Email</td>
+                            <td><a th:href="${'mailto:' + vet.email}" th:text="${vet.email}">—</a></td>
+                        </tr>
+                        <tr th:if="${vet.phone != null and !vet.phone.isEmpty()}">
+                            <td class="vp-info-label"><i class="bi bi-telephone me-1"></i> Điện thoại</td>
+                            <td><a th:href="${'tel:' + vet.phone}" th:text="${vet.phone}">—</a></td>
+                        </tr>
+                        <tr th:if="${vet.address != null and !vet.address.isEmpty()}">
+                            <td class="vp-info-label"><i class="bi bi-house me-1"></i> Địa chỉ</td>
+                            <td th:text="${vet.address}">—</td>
+                        </tr>
+                        <tr>
+                            <td class="vp-info-label"><i class="bi bi-award me-1"></i> Chuyên ngành</td>
+                            <td th:text="${vet.specialization ?: 'Tổng hợp'}">Chuyên khoa</td>
+                        </tr>
+                        <tr th:if="${vet.clinicName != null and !vet.clinicName.isEmpty()}">
+                            <td class="vp-info-label"><i class="bi bi-hospital me-1"></i> Phòng khám</td>
+                            <td th:text="${vet.clinicName}">PetCare Clinic</td>
+                        </tr>
+                        <tr th:if="${vet.clinicAddress != null and !vet.clinicAddress.isEmpty()}">
+                            <td class="vp-info-label"><i class="bi bi-geo-alt-fill me-1"></i> Địa chỉ</td>
+                            <td th:text="${vet.clinicAddress}">123 Đường ABC</td>
+                        </tr>
+                        <tr>
+                            <td class="vp-info-label"><i class="bi bi-calendar3 me-1"></i> Kinh nghiệm</td>
+                            <td th:text="${vet.yearsExperience > 0 ? (vet.yearsExperience + ' năm') : 'Chưa cập nhật'}">5 năm</td>
+                        </tr>
+                        <tr th:if="${vet.licenseNumber != null and !vet.licenseNumber.isEmpty()}">
+                            <td class="vp-info-label"><i class="bi bi-card-text me-1"></i> Số giấy phép</td>
+                            <td th:text="${vet.licenseNumber}">GD-12345</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Stats row -->
+                <div class="vp-stats-row mb-4">
+                    <div class="vp-stat-card">
+                        <div class="vp-stat-icon"><i class="bi bi-chat-dots-fill"></i></div>
+                        <div class="vp-stat-value" th:text="${consultationCount}">0</div>
+                        <div class="vp-stat-label">Người tư vấn</div>
+                    </div>
+                    <div class="vp-stat-card">
+                        <div class="vp-stat-icon"><i class="bi bi-star-fill text-warning"></i></div>
+                        <div class="vp-stat-value"
+                             th:text="${vet.rating != null ? #numbers.formatDecimal(vet.rating, 1, 1) : '0.0'}">0.0</div>
+                        <div class="vp-stat-label">Đánh giá</div>
+                    </div>
+                    <div class="vp-stat-card">
+                        <div class="vp-stat-icon"><i class="bi bi-chat-square-text-fill text-info"></i></div>
+                        <div class="vp-stat-value" th:text="${#lists.size(recentQuestions)}">0</div>
+                        <div class="vp-stat-label">Câu hỏi đã trả lời</div>
+                    </div>
+                </div>
+
+                <!-- Bio -->
+                <div class="vp-card mb-4" th:if="${vet.bio != null and !vet.bio.isEmpty()}">
+                    <h5 class="vp-card-title"><i class="bi bi-card-text"></i> Giới thiệu</h5>
+                    <p class="vp-bio mb-0" th:text="${vet.bio}">Bio...</p>
+                </div>
+            </div>
+
+            <!-- ── Right: Câu hỏi đã trả lời ────────────────────── -->
+            <div class="col-lg-7">
+                <div class="vp-card">
+                    <h5 class="vp-card-title"><i class="bi bi-check-circle-fill text-success"></i> Câu hỏi đã trả lời gần đây</h5>
+                    <div th:if="${!recentQuestions.isEmpty()}" class="vp-questions">
+                        <a th:each="q : ${recentQuestions}"
+                           th:href="@{/vet-qa/question/{id}(id=${q.id})}"
+                           class="vp-question-item">
+                            <div class="d-flex align-items-start gap-2">
+                                <div class="vp-q-icon">
+                                    <i class="bi bi-question-circle text-muted"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="vp-q-title" th:text="${q.title}">Tiêu đề câu hỏi</div>
+                                    <div class="vp-q-meta">
+                                        <span class="vp-q-cat"
+                                              th:text="${q.category?.name()?.replace('_', ' ') ?: 'Khác'}">Chủ đề</span>
+                                        <span class="vp-q-date">
+                                            <i class="bi bi-clock"></i>
+                                            <span th:text="${#temporals.format(q.answeredAt, 'dd/MM/yyyy')}">01/01/2024</span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <i class="bi bi-chevron-right text-muted"></i>
+                            </div>
+                        </a>
+                    </div>
+                    <div th:if="${recentQuestions.isEmpty()}" class="text-center py-4 text-muted">
+                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                        <p class="mb-0 small">Bác sĩ chưa trả lời câu hỏi nào công khai.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /#page-content -->
+
+<th:block id="page-scripts" th:fragment="page-scripts">
+<script th:inline="javascript">
+document.getElementById('vpChatBtn')?.addEventListener('click', function () {
+    var vetId    = /*[[${vet.id}]]*/ 0;
+    var conversationId = /*[[${conversationId}]]*/ null;
+    var vetName  = /*[[${vet.fullName}]]*/ '';
+    var vetSpec  = /*[[${vet.specialization}]]*/ '';
+    var vetAvatar = /*[[${vetProfileAvatarUrl}]]*/ null;
+
+    function openVetChat(vetId, convId, vetName, vetSpec, vetAvatar) {
+        window.dispatchEvent(new CustomEvent('nekomimi:open-vet', {
+            detail: { vetId: vetId, conversationId: convId, vetName: vetName, vetSpec: vetSpec, vetAvatar: vetAvatar }
+        }));
+    }
+
+    if (conversationId) {
+        openVetChat(vetId, conversationId, vetName, vetSpec, vetAvatar);
+    } else {
+        fetch('/api/conversations/vet/' + vetId)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                openVetChat(vetId, data.conversationId, vetName, vetSpec, vetAvatar);
+            })
+            .catch(function() { alert('Không thể mở cuộc trò chuyện.'); });
+    }
+});
+</script>
+</th:block>
+</body>
+</html>

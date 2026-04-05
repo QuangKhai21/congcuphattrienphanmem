@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout(~{::title}, ~{::#page-content}, ~{::#page-scripts})}">
+<head>
+    <title>Tìm thú cưng thất lạc - Pet Clinic</title>
+</head>
+<body>
+<div id="page-content" th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-search-heart"></i> Tìm thú cưng thất lạc 24/7</h2>
+        <a th:href="@{/lost-pets/new}" class="btn btn-danger" sec:authorize="isAuthenticated()">
+            <i class="bi bi-plus-circle"></i> Báo thất lạc
+        </a>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h3 th:text="${activeCount ?: 0}">0</h3>
+                    <p class="mb-0">Đang tìm kiếm</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3><i class="bi bi-check-circle"></i></h3>
+                    <p class="mb-0">Đã tìm thấy</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <a th:href="@{/lost-pets/map}" class="card text-decoration-none">
+                <div class="card-body text-center bg-primary text-white">
+                    <h3><i class="bi bi-map"></i></h3>
+                    <p class="mb-0">Xem bản đồ</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form th:action="@{/lost-pets}" method="get" class="row g-3">
+                <div class="col-md-10">
+                    <input type="text" name="keyword" class="form-control" 
+                           placeholder="Tìm kiếm theo tên thú cưng, địa điểm..." th:value="${keyword}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Tìm kiếm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reports Grid -->
+    <div class="row" th:if="${!reports.isEmpty()}">
+        <div class="col-md-4 mb-4" th:each="report : ${reports}">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-exclamation-triangle"></i> THẤT LẠC</span>
+                    <span class="badge"
+                          th:classappend="${report.status?.name() == 'ACTIVE'} ? 'bg-danger' : 'bg-success'"
+                          th:text="${report.status?.name() ?: '-'}">ACTIVE</span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <span th:text="${report.pet?.name ?: 'N/A'}">Tên thú cưng</span>
+                    </h5>
+                    <p class="card-text text-muted">
+                        <i class="bi bi-calendar"></i> 
+                        Mất ngày: <span th:text="${#temporals.format(report.lostDate, 'dd/MM/yyyy')}">01/01/2024</span>
+                    </p>
+                    <p class="card-text">
+                        <i class="bi bi-geo-alt"></i>
+                        <span th:text="${report.lastSeenLocation ?: 'Không rõ địa điểm'}">Địa điểm</span>
+                    </p>
+                    <p class="card-text" th:if="${report.reward}">
+                        <i class="bi bi-gift text-success"></i>
+                        <strong th:text="${report.reward}">Phần thưởng</strong>
+                    </p>
+                </div>
+                <div class="card-footer bg-white">
+                    <a th:href="@{/lost-pets/{id}(id=${report.id})}" 
+                       class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-eye"></i> Xem chi tiết
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info" th:if="${reports.isEmpty()}">
+        <i class="bi bi-info-circle"></i> Không có báo cáo thất lạc nào.
+    </div>
+
+    <!-- Pagination -->
+    <nav th:if="${totalPages > 1}">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/lost-pets(page=${currentPage - 1})}">Trước</a>
+            </li>
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link" th:href="@{/lost-pets(page=${i})}" th:text="${i + 1}">1</a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                <a class="page-link" th:href="@{/lost-pets(page=${currentPage + 1})}">Sau</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<th:block id="page-scripts" th:fragment="page-scripts">
+    <script th:src="@{/js/main.js}"></script>
+</th:block>
+</body>
+</html>

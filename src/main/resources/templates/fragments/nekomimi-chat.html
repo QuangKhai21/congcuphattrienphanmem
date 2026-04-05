@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="nekomimi-chat">
+    <!-- FAB nổi góc phải dưới — avatar Nekomimi -->
+    <div id="nekomimi-chat-root" class="nekomimi-chat-root" aria-live="polite"
+         th:attr="data-nekomimi-avatar=@{/images/nekomimi-ai-avatar.png}">
+        <button type="button" id="nekomimi-chat-fab" class="nekomimi-chat-fab" aria-expanded="false"
+                aria-controls="nekomimi-chat-panel" title="Chat Nekomimi AI & Bác sĩ">
+            <span class="nekomimi-chat-fab-icon-open" aria-hidden="true">
+                <img th:src="@{/images/nekomimi-ai-avatar.png}" alt="" class="nekomimi-chat-fab-avatar"
+                     width="100" height="100" decoding="async"/>
+            </span>
+            <span class="nekomimi-chat-fab-icon-close d-none" aria-hidden="true"><i class="bi bi-x-lg"></i></span>
+            <!-- Badge số tin nhắn chưa đọc — bị ẩn khi không có -->
+            <span id="nekomimi-fab-badge" class="nekomimi-fab-badge d-none" aria-label="Tin nhắn chưa đọc">0</span>
+        </button>
+
+        <div id="nekomimi-chat-panel" class="nekomimi-chat-panel shadow-lg" role="dialog"
+             aria-label="Chat Pet Care" hidden>
+            <div class="nekomimi-chat-layout">
+
+                <!-- ══ Left sidebar: thread list ═══════════════════════ -->
+                <aside class="nekomimi-chat-sidebar-left">
+                    <div class="nekomimi-chat-search-wrap">
+                        <button type="button" id="chat-compose-btn" class="btn btn-sm btn-outline-primary w-100 mb-2"
+                                title="Tìm người để chat riêng">
+                            <i class="bi bi-plus-lg"></i> Chat riêng
+                        </button>
+                        <!-- Hidden search input (shows results in dropdown) -->
+                        <div class="position-relative">
+                            <input type="search" id="nekomimi-chat-search" class="nekomimi-chat-search"
+                                   placeholder="Tìm tên người dùng..." autocomplete="off"/>
+                            <div id="user-search-results" class="user-search-dropdown"
+                                 style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #dee2e6; border-radius:.25rem; z-index:1000; max-height:200px; overflow-y:auto; box-shadow:0 .25rem .5rem rgba(0,0,0,.1);">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- AI thread — always first, non-removable -->
+                    <ul class="nekomimi-chat-thread-list list-unstyled mb-0" id="chatThreadList">
+                        <li>
+                            <button type="button" class="nekomimi-chat-thread is-active"
+                                    data-thread="ai" data-convid=""
+                                    th:attr="data-avatar-url=@{/images/nekomimi-ai-avatar.png}">
+                                <span class="nekomimi-chat-thread-avatar" aria-hidden="true">
+                                    <img th:src="@{/images/nekomimi-ai-avatar.png}" alt="" class="chat-avatar-img" loading="lazy" decoding="async"/>
+                                </span>
+                                <span class="nekomimi-chat-thread-meta">
+                                    <span class="nekomimi-chat-thread-name">Nekomimi AI</span>
+                                    <span class="nekomimi-chat-thread-preview text-muted small">Trợ lý Pet Care</span>
+                                </span>
+                            </button>
+                        </li>
+                        <!-- Vet threads injected by JS -->
+                    </ul>
+                </aside>
+
+                <!-- ══ Main chat area ════════════════════════════════ -->
+                <section class="nekomimi-chat-main" id="chatMainArea">
+                    <!-- Header — updated by JS based on active thread -->
+                    <header class="nekomimi-chat-header">
+                        <div class="nekomimi-chat-header-user">
+                            <span class="nekomimi-chat-header-avatar" id="chatHeaderAvatar">
+                                <img th:src="@{/images/nekomimi-ai-avatar.png}" alt="" class="chat-avatar-img" loading="lazy" decoding="async"/>
+                            </span>
+                            <div>
+                                <div class="nekomimi-chat-header-title" id="chatHeaderTitle">Nekomimi AI</div>
+                                <div class="nekomimi-chat-header-sub" id="chatHeaderSub">Trợ lý Pet Care</div>
+                            </div>
+                        </div>
+                        <button type="button" class="nekomimi-chat-btn-info" id="nekomimi-chat-toggle-right"
+                                aria-expanded="false" aria-controls="nekomimi-chat-aside-right"
+                                title="Thông tin cuộc trò chuyện">
+                            <i class="bi bi-info-lg"></i>
+                        </button>
+                    </header>
+
+                    <!-- Khu chat: nền = ảnh đại diện người đang chat (mỗi thread một ảnh) -->
+                    <div class="nekomimi-chat-messages-wrap">
+                        <div class="nekomimi-chat-messages-bg" id="nekomimiChatMessagesBg" aria-hidden="true"></div>
+                        <div id="nekomimi-chat-messages" class="nekomimi-chat-messages"></div>
+                    </div>
+
+                    <!-- Composer -->
+                    <footer class="nekomimi-chat-composer">
+                        <div class="nekomimi-chat-composer-inner">
+                            <button type="button" class="nekomimi-chat-tool" disabled title="Đính kèm (sắp có)">
+                                <i class="bi bi-image"></i>
+                            </button>
+                            <div class="nekomimi-chat-input-wrap">
+                                <label class="visually-hidden" for="nekomimi-chat-input">Nhập tin nhắn</label>
+                                <input type="text" id="nekomimi-chat-input" class="nekomimi-chat-input"
+                                       placeholder="Aa" maxlength="2000" autocomplete="off"/>
+                                <button type="button" class="nekomimi-chat-emoji" disabled title="Emoji (sắp có)">
+                                    <i class="bi bi-emoji-smile"></i>
+                                </button>
+                            </div>
+                            <button type="button" class="nekomimi-chat-send-ai" id="nekomimi-chat-send" title="Gửi">
+                                <i class="bi bi-stars"></i>
+                            </button>
+                        </div>
+                    </footer>
+                </section>
+
+                <!-- ══ Right sidebar: info ══════════════════════════ -->
+                <aside id="nekomimi-chat-aside-right" class="nekomimi-chat-sidebar-right">
+                    <div class="nekomimi-chat-profile">
+                        <div class="nekomimi-chat-profile-avatar" id="chatProfileAvatar">
+                            <img th:src="@{/images/nekomimi-ai-avatar.png}" alt="" class="chat-avatar-img" loading="lazy" decoding="async"/>
+                        </div>
+                        <div class="nekomimi-chat-profile-name" id="chatProfileName">
+                            Nekomimi AI
+                            <i class="bi bi-patch-check-fill nekomimi-chat-verified" title="Trợ lý chính thức"></i>
+                        </div>
+                        <div class="nekomimi-chat-profile-actions">
+                            <button type="button" class="nekomimi-chat-profile-btn" disabled>
+                                <i class="bi bi-bell-slash"></i><span>Tắt TB</span>
+                            </button>
+                            <button type="button" class="nekomimi-chat-profile-btn" disabled>
+                                <i class="bi bi-search"></i><span>Tìm kiếm</span>
+                            </button>
+                        </div>
+                        <details class="nekomimi-chat-details" open>
+                            <summary>Giới thiệu</summary>
+                            <p class="small text-muted mb-0 nekomimi-chat-profile-bio">
+                                Hỗ trợ gợi ý chăm sóc thú cưng, gợi ý dùng dịch vụ. Không thay thế bác sĩ thú y.
+                            </p>
+                        </details>
+                        <details class="nekomimi-chat-details">
+                            <summary>Quyền riêng tư</summary>
+                            <p class="small text-muted mb-0 nekomimi-chat-profile-privacy">
+                                Tin nhắn chỉ lưu trên trình duyệt của bạn trong phiên này.
+                            </p>
+                        </details>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+</th:block>
+</html>

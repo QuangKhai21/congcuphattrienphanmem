@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Thông báo - Pet Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav ('/notifications')}"></div>
+
+<div class="container py-4" style="margin-bottom: 4rem;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4><i class="bi bi-bell"></i> Thông báo</h4>
+        <a th:href="@{/notifications/mark-all-read}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-check-all"></i> Đánh dấu tất cả đã đọc
+        </a>
+    </div>
+
+    <!-- Alert -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="mb-0 text-primary" th:text="${totalNotifications ?: 0}">0</h3>
+                    <small class="text-muted">Tổng thông báo</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="mb-0 text-danger" th:text="${unreadCount ?: 0}">0</h3>
+                    <small class="text-muted">Chưa đọc</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="mb-0 text-success" th:text="${totalNotifications - unreadCount}">0</h3>
+                    <small class="text-muted">Đã đọc</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div th:if="${not #lists.isEmpty(notifications)}">
+                <div th:each="notif : ${notifications}" class="notification-item p-3 border-bottom"
+                     th:classappend="${!notif.read} ? 'bg-light' : ''">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="rounded-circle bg-opacity-10 d-flex align-items-center justify-content-center"
+                                 style="width: 45px; height: 45px;"
+                                 th:classappend="${notif.type == 'vaccination'} ? 'bg-success' : 'bg-warning'">
+                                <i th:class="${notif.iconClass}" style="font-size: 1.2rem;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1" th:text="${notif.title}">Title</h6>
+                                    <p class="mb-1 text-muted small" th:text="${notif.message}">Message</p>
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock"></i> <span th:text="${notif.timeAgo}">Time ago</span>
+                                    </small>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span th:if="${!notif.read}" class="badge bg-danger">Mới</span>
+                                    <a th:href="@{/notifications/mark-read/{id}(id=${notif.id})}" 
+                                       class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-check"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <a th:if="${notif.link != null and notif.link != ''}"
+                               th:href="@{${notif.link}}"
+                               class="btn btn-sm btn-primary mt-2">
+                                <i class="bi bi-arrow-right"></i> Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div th:if="${#lists.isEmpty(notifications)}" class="text-center py-5">
+                <div class="bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
+                     style="width: 100px; height: 100px;">
+                    <i class="bi bi-bell-slash text-primary fs-1"></i>
+                </div>
+                <h5 class="text-muted">Không có thông báo nào</h5>
+                <p class="text-muted">Bạn sẽ nhận được thông báo về lịch tiêm phòng và lịch hẹn khám tại đây</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

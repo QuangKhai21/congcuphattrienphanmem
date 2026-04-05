@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout(~{::title}, ~{::#page-content}, ~{::#page-scripts})}">
+<head>
+    <title th:text="${question.title}">Chi tiết câu hỏi</title>
+</head>
+<body>
+<div id="page-content" th:fragment="content">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/vet-qa}">Hỏi đáp</a></li>
+            <li class="breadcrumb-item active">Chi tiết</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge bg-secondary me-2" th:text="${question.category.name().replace('_', ' ')}">Chủ đề</span>
+                        <span th:class="${question.status?.name() == 'PENDING'} ? 'badge bg-warning text-dark' : 'badge bg-success'"
+                              th:text="${question.status?.name() == 'PENDING'} ? 'Chờ trả lời' : 'Đã trả lời'">Trạng thái</span>
+                    </div>
+                    <div class="text-muted">
+                        <i class="bi bi-eye"></i> <span th:text="${question.viewCount}">0</span> lượt xem
+                        <span class="ms-3"><i class="bi bi-heart text-danger"></i> <span th:text="${question.likeCount}">0</span></span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h3 th:text="${question.title}">Tiêu đề câu hỏi</h3>
+                    
+                    <div class="d-flex align-items-center mb-3 text-muted small">
+                        <span><i class="bi bi-person"></i> <span th:text="${question.author.fullName}">Tác giả</span></span>
+                        <span class="ms-3" th:if="${question.pet}">
+                            <i class="bi bi-github"></i> <a th:href="@{/pets/{id}(id=${question.pet.id})}" th:text="${question.pet.name}">Thú cưng</a>
+                        </span>
+                        <span class="ms-3">
+                            <i class="bi bi-clock"></i> <span th:text="${#temporals.format(question.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày đăng</span>
+                        </span>
+                    </div>
+
+                    <div class="question-content mb-4" th:utext="${#strings.replace(question.content, '&#10;', '&lt;br&gt;')}">
+                        Noi dung cau hoi...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Answer Section -->
+            <div class="card shadow mb-4" th:if="${question.answer != null}">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-check-circle"></i> Câu trả lời từ bác sĩ thú y
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <strong><i class="bi bi-person-badge"></i> <span th:text="${question.answeredBy?.fullName ?: 'Bác sĩ thú y'}">Bác sĩ</span></strong>
+                                <span class="badge bg-success ms-2">BS Thú y</span>
+                                <span class="ms-auto text-muted small">
+                                    <span th:text="${#temporals.format(question.answeredAt, 'dd/MM/yyyy HH:mm')}">Ngày trả lời</span>
+                                </span>
+                            </div>
+                            <div class="answer-content" th:utext="${#strings.replace(question.answer.content, '&#10;', '&lt;br&gt;')}">
+                                Noi dung cau tra loi...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Answer Form (for VET role) -->
+            <div class="card shadow" sec:authorize="hasAnyRole('ADMIN', 'VET')" th:if="${question.status?.name() == 'PENDING'}">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-reply"></i> Trả lời câu hỏi
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/vet-qa/question/{id}/answer(id=${question.id})}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <div class="mb-3">
+                            <textarea name="content" class="form-control" rows="6" 
+                                      placeholder="Nhập câu trả lời chi tiết..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-send"></i> Gửi câu trả lời
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Answer Form (for existing answer) -->
+            <div class="card shadow" sec:authorize="hasAnyRole('ADMIN', 'VET')" th:if="${question.status?.name() == 'ANSWERED'}">
+                <div class="card-header bg-secondary text-white">
+                    <i class="bi bi-pencil"></i> Cập nhật câu trả lời
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/vet-qa/question/{id}/answer(id=${question.id})}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <div class="mb-3">
+                            <textarea name="content" class="form-control" rows="6" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Cập nhật
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- No answer yet -->
+            <div class="alert alert-warning" th:if="${question.answer == null and !#authorization.expression('hasAnyRole(''ADMIN'', ''VET'')')}">
+                <i class="bi bi-hourglass-split"></i> Câu hỏi đang chờ bác sĩ thú y trả lời. Xin vui lòng đợi trong giây lát.
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-lightbulb"></i> Mẹo hỏi hiệu quả
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0 small">
+                        <li>Mô tả rõ triệu chứng và thời gian xuất hiện</li>
+                        <li>Nêu rõ loại, tuổi, cân nặng thú cưng</li>
+                        <li>Liệt kê các thuốc đang dùng (nếu có)</li>
+                        <li>Đăng ảnh nếu có biểu hiện bên ngoài</li>
+                        <li>Câu hỏi cấp cứu → gọi hotline ngay!</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <i class="bi bi-share"></i> Chia sẻ
+                </div>
+                <div class="card-body">
+                    <button onclick="shareQuestion()" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-share"></i> Chia sẻ câu hỏi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block id="page-scripts" th:fragment="page-scripts">
+    <script>
+    function shareQuestion() {
+        if (navigator.share) {
+            navigator.share({
+                title: document.title,
+                url: window.location.href
+            });
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            alert('Đã copy link!');
+        }
+    }
+    </script>
+</th:block>
+</body>
+</html>

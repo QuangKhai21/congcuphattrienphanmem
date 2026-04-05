@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="|Hồ sơ bệnh án - ${pet.name} - Pet Care|">Hồ sơ bệnh án</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body class="theme-body">
+<div th:replace="~{fragments/nav :: nav ('/pets')}"></div>
+
+<main class="container py-4 site-main" style="margin-bottom: 4rem;">
+
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div class="d-flex align-items-center min-w-0">
+            <a th:href="@{/pets}" class="btn btn-outline-secondary me-3 flex-shrink-0">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h2 class="mb-0 text-truncate" th:text="|Hồ sơ bệnh án — ${pet.name}|">Hồ sơ bệnh án</h2>
+        </div>
+        <a th:href="@{/pets/{id}/medical-records/new(id=${pet.id})}" class="btn btn-danger flex-shrink-0">
+            <i class="bi bi-plus-lg"></i> Thêm hồ sơ
+        </a>
+    </div>
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body py-3">
+            <div class="row align-items-center">
+                <th:block th:replace="~{fragments/pet-health-subpage :: asideAndInfo(${pet}, true)}"/>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div th:if="${not #lists.isEmpty(records)}">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ngày khám</th>
+                                <th>Chẩn đoán</th>
+                                <th>Triệu chứng</th>
+                                <th>Điều trị</th>
+                                <th>Đơn thuốc</th>
+                                <th>Cân nặng</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="record : ${records}">
+                                <td th:text="${#temporals.format(record.recordDate, 'dd/MM/yyyy HH:mm')}"></td>
+                                <td><span class="fw-medium text-danger" th:text="${record.diagnosis}"></span></td>
+                                <td><span th:text="${record.symptoms ?: '-'}"></span></td>
+                                <td><span th:text="${record.treatment ?: '-'}"></span></td>
+                                <td><span th:text="${record.prescription ?: '-'}"></span></td>
+                                <td>
+                                    <span th:if="${record.weight}" th:text="${record.weight} + ' kg'"></span>
+                                    <span th:unless="${record.weight}" class="text-muted">-</span>
+                                </td>
+                                <td class="text-center text-nowrap">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            data-bs-toggle="modal"
+                                            th:data-bs-target="'#viewModal' + ${record.id}">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <form th:action="@{/pets/{petId}/medical-records/{recordId}/delete(petId=${pet.id},recordId=${record.id})}"
+                                          method="post" class="d-inline"
+                                          onsubmit="return confirm('Xóa hồ sơ bệnh án này?');">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div th:if="${#lists.isEmpty(records)}" class="text-center py-5">
+                <i class="bi bi-clipboard-x text-muted" style="font-size: 4rem;"></i>
+                <p class="text-muted mt-3">Chưa có hồ sơ bệnh án nào</p>
+                <a th:href="@{/pets/{id}/medical-records/new(id=${pet.id})}" class="btn btn-danger">
+                    <i class="bi bi-plus-lg"></i> Thêm hồ sơ bệnh án đầu tiên
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${not #lists.isEmpty(records)}" class="row g-3 mt-2">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white shadow-sm h-100">
+                <div class="card-body text-center py-4">
+                    <h3 class="mb-0" th:text="${totalRecords}">0</h3>
+                    <small>Tổng hồ sơ bệnh án</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white shadow-sm h-100">
+                <div class="card-body text-center py-4">
+                    <h3 class="mb-0" th:text="${#temporals.format(records[0].recordDate, 'dd/MM/yyyy')}"></h3>
+                    <small>Lần khám gần nhất</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 d-flex">
+            <a th:href="@{/reports/medical-records/{petId}(petId=${pet.id})}"
+               class="btn btn-outline-primary w-100 align-self-stretch d-flex align-items-center justify-content-center py-3 shadow-sm">
+                <i class="bi bi-download me-2"></i> Xuất báo cáo bệnh án
+            </a>
+        </div>
+    </div>
+
+</main>
+
+<div th:each="record : ${records}" th:id="'viewModal' + ${record.id}" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Chi tiết hồ sơ bệnh án</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Ngày khám:</strong> <span th:text="${#temporals.format(record.recordDate, 'dd/MM/yyyy HH:mm')}"></span></p>
+                        <p><strong>Chẩn đoán:</strong> <span class="text-danger" th:text="${record.diagnosis}"></span></p>
+                        <p><strong>Cân nặng:</strong> <span th:text="${record.weight ?: '-'}"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Triệu chứng:</strong></p>
+                        <p th:text="${record.symptoms ?: 'Không có'}"></p>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Phương pháp điều trị:</strong></p>
+                        <p th:text="${record.treatment ?: 'Không có'}"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Đơn thuốc:</strong></p>
+                        <p th:text="${record.prescription ?: 'Không có'}"></p>
+                    </div>
+                </div>
+                <div th:if="${record.notes}">
+                    <hr>
+                    <p><strong>Ghi chú:</strong></p>
+                    <p th:text="${record.notes}"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

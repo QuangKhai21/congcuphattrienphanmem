@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Đặt lịch hẹn - Pet Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav}"></div>
+
+<div class="container py-4">
+    <h2>Đặt lịch hẹn mới</h2>
+    <form th:action="@{/appointments}" th:object="${appointment}" method="post" class="mt-4">
+        <div class="mb-3">
+            <label class="form-label">Thú cưng *</label>
+            <select name="petId" class="form-select" required>
+                <option value="">-- Chọn thú cưng --</option>
+                <option th:each="pet : ${pets}" th:value="${pet.id}" th:text="${pet.name + ' (' + pet.category.name + ')'}">Pet</option>
+            </select>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Ngày *</label>
+                <input type="date" name="date" class="form-control" required th:min="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"/>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Giờ *</label>
+                <input type="time" name="time" class="form-control" required/>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Loại dịch vụ</label>
+            <select th:field="*{type}" class="form-select">
+                <option value="CHECKUP">Khám tổng quát</option>
+                <option value="VACCINATION">Tiêm phòng</option>
+                <option value="GROOMING">Cắt tỉa lông</option>
+                <option value="SURGERY">Phẫu thuật</option>
+                <option value="DENTAL">Chăm sóc răng</option>
+                <option value="OTHER">Khác</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Lý do / Triệu chứng</label>
+            <input type="text" th:field="*{reason}" class="form-control" placeholder="VD: Khám định kỳ"/>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Ghi chú</label>
+            <textarea th:field="*{notes}" class="form-control" rows="2"></textarea>
+        </div>
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button type="submit" class="btn btn-primary">Đặt lịch</button>
+        <a th:href="@{/appointments}" class="btn btn-secondary">Hủy</a>
+    </form>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

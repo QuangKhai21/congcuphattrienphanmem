@@ -1,0 +1,2047 @@
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Great+Vibes&family=Playfair+Display:ital,wght@0,600;1,600&display=swap");
+
+/* Theme: forest green + cream + orange (template reference) */
+:root {
+    --brand-green: #1a4332;
+    --brand-green-dark: #142e24;
+    --brand-green-soft: #1e5631;
+    --brand-cream: #fdf8f1;
+    --brand-cream-deep: #f5ebe0;
+    --brand-orange: #f39200;
+    --brand-orange-hover: #d67f00;
+    --brand-taupe: #b5b0a7;
+    --brand-gold: #d4a84b;
+    --body-bg: #f4f2ef;
+    --input-bg: #eceae6;
+    --text-on-dark: #ffffff;
+    --bs-primary: var(--brand-green);
+    --bs-primary-rgb: 26, 67, 50;
+}
+
+/* Chỉ dùng khi nhảy tới #anchor — không tạo khoảng trống trên toàn trang */
+html {
+    scroll-padding-top: 1rem;
+}
+
+body.theme-body,
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
+    background-color: var(--body-bg);
+    color: #1a2e28;
+}
+
+main.site-main,
+main {
+    flex: 1;
+}
+
+/* —— Header —— */
+.site-header {
+    box-shadow: 0 2px 12px rgba(26, 67, 50, 0.08);
+    z-index: 1030;
+}
+
+.site-header.sticky-top {
+    z-index: 1030;
+}
+
+/*
+ * Modal Bootstrap: header sticky (z-index 1030) có thể che phần đầu dialog
+ * (BS5 đặt .modal-dialog margin-top ~1.75rem). Không dùng padding-top body.
+ */
+body.theme-body .modal {
+    --bs-modal-zindex: 1080;
+    z-index: 1080;
+}
+
+body.theme-body .modal-backdrop {
+    --bs-backdrop-zindex: 1070;
+    z-index: 1070;
+}
+
+body.theme-body .modal .modal-dialog {
+    margin-top: clamp(4.5rem, 12vh, 7rem);
+    margin-bottom: 1.75rem;
+}
+
+/* 仅首页展示的系统标语条（与顶栏 site-topbar 同色） */
+.site-home-tagline {
+    background: linear-gradient(135deg, var(--brand-green) 0%, var(--brand-green-dark) 50%, #0d2818 100%);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: none;
+}
+
+/* 登录/注册等认证页：极简顶栏 */
+.auth-minimal-header {
+    background: var(--brand-green);
+    box-shadow: 0 2px 12px rgba(26, 67, 50, 0.08);
+    flex-shrink: 0;
+}
+
+.auth-minimal-header .site-logo {
+    font-size: 1.5rem;
+}
+
+.site-topbar {
+    background: linear-gradient(135deg, var(--brand-green) 0%, var(--brand-green-dark) 50%, #0d2818 100%);
+    color: var(--text-on-dark);
+    box-shadow: 0 4px 16px rgba(26, 67, 50, 0.25);
+}
+
+.site-logo {
+    font-family: "Playfair Display", Georgia, serif;
+    font-weight: 600;
+    font-size: 1.75rem;
+    line-height: 1.1;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.site-logo-a {
+    color: #fff;
+}
+
+.site-logo-rest {
+    color: var(--brand-gold);
+}
+
+.site-search .form-control {
+    border: none;
+    border-radius: 999px 0 0 999px;
+    padding: 0.55rem 1rem;
+    background: #fff;
+    font-size: 0.9rem;
+}
+
+.site-search .form-control:focus {
+    box-shadow: none;
+    border-color: transparent;
+}
+
+/* Cột giữa topbar: cho phép ô tìm kiếm co lại trong flex row */
+.site-topbar-search-col {
+    min-width: 0;
+}
+
+.site-search .input-group,
+.site-search .site-search-input-group {
+    max-width: 560px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.site-search-btn {
+    background: var(--brand-orange) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 0 999px 999px 0 !important;
+    padding: 0 1.15rem;
+}
+
+.site-search-btn:hover {
+    background: var(--brand-orange-hover) !important;
+    color: #fff !important;
+}
+
+.site-topbar .nav-link {
+    color: rgba(255, 255, 255, 0.92) !important;
+    font-size: 0.9rem;
+}
+
+.site-topbar .nav-link:hover {
+    color: #fff !important;
+}
+
+.site-topbar .vr {
+    opacity: 0.35;
+    min-height: 1.5rem;
+    align-self: center;
+}
+
+.site-subnav {
+    background: var(--brand-cream);
+    border-bottom: 1px solid rgba(26, 67, 50, 0.08);
+}
+
+.site-subnav .navbar-toggler {
+    border-color: rgba(26, 67, 50, 0.25);
+    color: var(--brand-green);
+}
+
+.site-subnav .navbar-toggler-icon {
+    filter: invert(20%) sepia(15%) saturate(2000%) hue-rotate(100deg);
+}
+
+.site-subnav .nav-link {
+    color: var(--brand-green) !important;
+    font-weight: 500;
+    font-size: 0.92rem;
+    padding: 0.65rem 0.75rem !important;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+}
+
+.site-subnav .nav-link:hover {
+    color: var(--brand-orange) !important;
+}
+
+.site-subnav .nav-link.active {
+    color: var(--brand-green) !important;
+    border-bottom-color: var(--brand-orange);
+}
+
+.site-hotline {
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--brand-green);
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding-left: 1rem;
+    border-left: 1px solid rgba(26, 67, 50, 0.2);
+}
+
+.site-hotline i {
+    color: var(--brand-orange);
+}
+
+/* Notifications */
+.notification-menu {
+    max-height: 400px;
+}
+
+.notification-items-scroll {
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.notification-item:hover {
+    background-color: var(--brand-cream);
+}
+
+.notification-item.unread {
+    background-color: #fff5e6;
+}
+
+.site-topbar .dropdown-menu {
+    border-radius: 12px;
+    border: 1px solid rgba(26, 67, 50, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Bootstrap primary → brand */
+.btn-primary {
+    --bs-btn-bg: var(--brand-green);
+    --bs-btn-border-color: var(--brand-green);
+    --bs-btn-hover-bg: var(--brand-green-dark);
+    --bs-btn-hover-border-color: var(--brand-green-dark);
+    --bs-btn-active-bg: var(--brand-green-dark);
+    --bs-btn-active-border-color: var(--brand-green-dark);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--brand-green);
+    --bs-btn-border-color: var(--brand-green);
+    --bs-btn-hover-bg: var(--brand-green);
+    --bs-btn-hover-border-color: var(--brand-green);
+}
+
+.text-primary {
+    color: var(--brand-green) !important;
+}
+
+.navbar-brand {
+    font-weight: 600;
+}
+
+/* Cards */
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 12px;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1.25rem rgba(26, 67, 50, 0.12) !important;
+}
+
+.product-card .card-body {
+    position: relative;
+}
+
+/* Home: info bar */
+.site-info-bar {
+    background: var(--brand-orange);
+    color: #fff;
+    padding: 1.25rem 0;
+}
+
+.site-info-bar .info-item {
+    text-align: center;
+    padding: 0 0.5rem;
+}
+
+.site-info-bar .info-title {
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-top: 0.35rem;
+    margin-bottom: 0.15rem;
+}
+
+.site-info-bar .info-desc {
+    font-size: 0.78rem;
+    opacity: 0.95;
+    margin: 0;
+}
+
+.site-info-bar i {
+    font-size: 1.5rem;
+    opacity: 0.95;
+}
+
+/* Home hero */
+.site-hero {
+    background: linear-gradient(135deg, var(--brand-taupe) 0%, #9a948b 100%);
+    color: #fff;
+    padding: 3rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.site-hero-kicker {
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.95;
+    margin-bottom: 0.35rem;
+}
+
+.site-hero-script {
+    font-family: "Great Vibes", cursive;
+    font-size: clamp(2.5rem, 6vw, 3.75rem);
+    line-height: 1.15;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+}
+
+.site-hero .lead {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.site-hero .btn-light {
+    border-radius: 999px;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+}
+
+.site-hero .btn-outline-light {
+    border-radius: 999px;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+}
+
+/* Section title like "SẢN PHẨM HOT" */
+.site-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.site-section-title {
+    position: relative;
+    font-size: 1.35rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--brand-green-soft);
+    padding-top: 0.75rem;
+    margin: 0;
+}
+
+.site-section-title::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 48px;
+    height: 3px;
+    background: var(--brand-orange);
+    border-radius: 2px;
+}
+
+.site-features {
+    background: var(--brand-cream);
+}
+
+.site-feature-card {
+    background: #fff;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(26, 67, 50, 0.06);
+}
+
+.site-feature-card .display-4,
+.site-feature-card .bi {
+    color: var(--brand-orange) !important;
+}
+
+.site-feature-card .card-title {
+    color: var(--brand-green);
+    font-weight: 600;
+}
+
+/* Auth pages */
+.auth-page {
+    background: var(--body-bg);
+}
+
+.auth-page > .container {
+    flex: 1;
+}
+
+.auth-breadcrumb {
+    font-size: 0.875rem;
+    color: #5c6f66;
+    padding: 0.75rem 0 0;
+}
+
+.auth-breadcrumb a {
+    color: var(--brand-green);
+    text-decoration: none;
+}
+
+.auth-breadcrumb a:hover {
+    text-decoration: underline;
+    color: var(--brand-orange);
+}
+
+.auth-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(26, 67, 50, 0.1);
+    border: none;
+}
+
+.auth-card .card-body {
+    padding: 2.25rem 2rem;
+}
+
+.auth-title {
+    font-size: 1.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--brand-green-soft);
+    margin-bottom: 0.5rem;
+}
+
+.auth-card .form-control {
+    background: var(--input-bg);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 0.65rem 1rem;
+}
+
+.auth-card .form-control:focus {
+    background: #fff;
+    border-color: var(--brand-green);
+    box-shadow: 0 0 0 3px rgba(26, 67, 50, 0.12);
+}
+
+.auth-card label.form-label {
+    color: #3d5248;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.btn-auth-submit {
+    background: var(--brand-green);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    width: 100%;
+}
+
+.btn-auth-submit:hover {
+    background: var(--brand-green-dark);
+    color: #fff;
+}
+
+.btn-social-google {
+    background: #ea4335;
+    color: #fff !important;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.btn-social-google:hover {
+    background: #d33426;
+    color: #fff !important;
+}
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: #6b7d74;
+    font-size: 0.85rem;
+    margin: 1.5rem 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(26, 67, 50, 0.15);
+}
+
+.auth-link-muted {
+    color: var(--brand-green);
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.auth-link-muted:hover {
+    color: var(--brand-orange);
+    text-decoration: underline;
+}
+
+/* Footer */
+.site-footer {
+    background: var(--brand-green);
+    color: rgba(255, 255, 255, 0.88);
+    padding: 1.25rem 0;
+    margin-top: auto;
+    font-size: 0.875rem;
+}
+
+/* Back to top */
+.btn-back-top {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #4a4a4a;
+    color: #fff;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1040;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+}
+
+.btn-back-top.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.btn-back-top:hover {
+    background: #333;
+    color: #fff;
+}
+
+/* Alerts on cream background */
+main .alert-success {
+    border-radius: 10px;
+    border: none;
+}
+
+main .alert-danger {
+    border-radius: 10px;
+    border: none;
+}
+
+footer {
+    margin-top: auto;
+}
+
+/* —— Nekomimi AI 悬浮聊天（FAB  vàng + 奶油/森林绿界面） —— */
+.nekomimi-chat-root {
+    --nekomimi-fab-size: 100px;
+    --nekomimi-stack-above-backtop: calc(1.25rem + 44px + 0.75rem);
+    font-family: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
+    /* Tạo stacking context riêng — isolation ngăn phần tử cha/lẫn nhau đè FAB */
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;       /* root không chặn click — chỉ FAB + panel nhận */
+    z-index: 1042;
+}
+
+.nekomimi-chat-fab {
+    position: fixed;
+    right: 1.25rem;
+    bottom: calc(var(--nekomimi-stack-above-backtop) + 44px + 8px);
+    width: var(--nekomimi-fab-size);
+    height: var(--nekomimi-fab-size);
+    border-radius: 50%;
+    border: 3px solid #ffcc33;
+    padding: 0;
+    overflow: hidden;
+    background: #fff;
+    color: var(--brand-green, #1a4332);
+    box-shadow: 0 6px 24px rgba(255, 180, 40, 0.45), 0 2px 8px rgba(0, 0, 0, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    z-index: 1095;
+    pointer-events: auto;
+}
+
+.nekomimi-chat-fab-icon-open {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.nekomimi-chat-fab-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 50%;
+}
+
+.nekomimi-chat-fab-icon {
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nekomimi-chat-fab:hover {
+    border-color: #f2b800;
+    transform: scale(1.04);
+    color: var(--brand-green-dark, #143828);
+}
+
+/* Badge số tin nhắn chưa đọc trên FAB */
+.nekomimi-fab-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: #dc3545;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    box-shadow: 0 0 0 2px #fff;
+    pointer-events: none;
+    animation: nekomimi-badge-pop 0.25s ease;
+}
+.nekomimi-fab-badge.d-none { display: none; }
+@keyframes nekomimi-badge-pop {
+    0%   { transform: scale(0.5); }
+    70%  { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.nekomimi-chat-root.is-open .nekomimi-chat-fab {
+    background: var(--brand-green);
+    border-color: var(--brand-green);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(26, 67, 50, 0.35);
+}
+
+.nekomimi-chat-root.is-open .nekomimi-chat-fab:hover {
+    background: var(--brand-green-dark);
+    border-color: var(--brand-green-dark);
+    color: #fff;
+}
+
+.nekomimi-chat-panel {
+    position: fixed;
+    right: 1.25rem;
+    bottom: calc(var(--nekomimi-stack-above-backtop) + 44px + 8px + var(--nekomimi-fab-size) + 10px);
+    width: min(720px, calc(100vw - 1.5rem));
+    height: min(560px, calc(100vh - 8rem));
+    max-height: calc(100vh - 8rem);
+    background: var(--brand-cream);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(26, 67, 50, 0.1);
+    z-index: 1043;
+    display: flex;
+    flex-direction: column;
+    pointer-events: auto;
+}
+
+.nekomimi-chat-panel[hidden] {
+    display: none !important;
+}
+
+.nekomimi-chat-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+}
+
+/* 平板及以上：左侧会话列表 + 主区 */
+@media (min-width: 768px) {
+    .nekomimi-chat-layout {
+        grid-template-columns: 200px 1fr;
+    }
+}
+
+/* 桌面：右侧资料栏；收起时仅两列 */
+@media (min-width: 900px) {
+    .nekomimi-chat-layout {
+        grid-template-columns: 200px 1fr 188px;
+    }
+
+    .nekomimi-chat-root.is-right-collapsed .nekomimi-chat-layout {
+        grid-template-columns: 200px 1fr;
+    }
+
+    .nekomimi-chat-root.is-right-collapsed .nekomimi-chat-sidebar-right {
+        display: none;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .nekomimi-chat-sidebar-left {
+        display: none;
+    }
+
+    .nekomimi-chat-sidebar-right {
+        display: none;
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        background: var(--brand-cream);
+        animation: nekomimi-slide-in 0.2s ease;
+    }
+
+    .nekomimi-chat-root.is-right-open .nekomimi-chat-sidebar-right {
+        display: block;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 899.98px) {
+    .nekomimi-chat-sidebar-right {
+        display: none;
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        background: var(--brand-cream);
+        animation: nekomimi-slide-in 0.2s ease;
+    }
+
+    .nekomimi-chat-root.is-right-open .nekomimi-chat-sidebar-right {
+        display: block;
+    }
+}
+
+@keyframes nekomimi-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.nekomimi-chat-sidebar-left {
+    background: #fff;
+    border-right: 1px solid rgba(26, 67, 50, 0.08);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.nekomimi-chat-search-wrap {
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid rgba(26, 67, 50, 0.06);
+}
+
+.nekomimi-chat-search {
+    width: 100%;
+    border: none;
+    border-radius: 999px;
+    padding: 0.45rem 0.85rem;
+    font-size: 0.85rem;
+    background: var(--input-bg);
+    color: #1a2e28;
+}
+
+.nekomimi-chat-thread-list {
+    padding: 0.35rem;
+    overflow-y: auto;
+}
+
+.nekomimi-chat-thread {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.45rem;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.nekomimi-chat-thread:hover {
+    background: #eef6fc;
+}
+
+.nekomimi-chat-thread.is-active {
+    background: #e7f3ff;
+}
+
+.nekomimi-chat-thread-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand-orange), var(--brand-gold));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.nekomimi-chat-thread-avatar .chat-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+}
+
+.nekomimi-chat-thread-meta {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.nekomimi-chat-thread-name {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--brand-green);
+}
+
+.nekomimi-chat-thread-preview {
+    font-size: 0.72rem;
+    color: #6b7d74;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nekomimi-chat-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+    background: var(--body-bg);
+    position: relative;
+}
+
+.nekomimi-chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.55rem 0.75rem;
+    background: #fff;
+    border-bottom: 1px solid rgba(26, 67, 50, 0.08);
+}
+
+.nekomimi-chat-header-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.nekomimi-chat-header-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand-green-soft), var(--brand-green));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.nekomimi-chat-header-avatar .chat-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+}
+
+.nekomimi-chat-header-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--brand-green);
+}
+
+.nekomimi-chat-header-sub {
+    font-size: 0.72rem;
+    color: #6b7d74;
+}
+
+.nekomimi-chat-btn-info {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(243, 146, 0, 0.15);
+    color: var(--brand-orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.nekomimi-chat-btn-info:hover {
+    background: rgba(243, 146, 0, 0.28);
+}
+
+/* Vùng tin nhắn: lớp nền mờ = ảnh đại diện thread (AI / bác sĩ) */
+.nekomimi-chat-messages-wrap {
+    flex: 1 1 0;
+    min-height: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.nekomimi-chat-messages-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-color: #f4f7f6;
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    opacity: 0.28;
+    pointer-events: none;
+}
+
+.nekomimi-chat-messages-wrap::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: rgba(255, 252, 248, 0.82);
+    pointer-events: none;
+}
+
+.nekomimi-chat-messages {
+    flex: 1 1 0;
+    position: relative;
+    z-index: 2;
+    overflow-y: auto;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-height: 0;
+}
+
+.nekomimi-chat-time {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #8a9590;
+    margin: 0.35rem 0;
+}
+
+.nekomimi-chat-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    margin-bottom: 6px;
+    max-width: 100%;
+}
+
+.nekomimi-chat-row.incoming {
+    justify-content: flex-start;
+}
+
+.nekomimi-chat-row.outgoing {
+    justify-content: flex-end;
+}
+
+.nekomimi-chat-bubble-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand-orange), var(--brand-gold));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.nekomimi-chat-bubble-avatar .chat-avatar-img,
+.nekomimi-chat-bubble-avatar img.chat-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.nekomimi-chat-bubble {
+    max-width: min(92%, 320px);
+    padding: 0.55rem 0.85rem;
+    border-radius: 18px;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.nekomimi-chat-row.incoming .nekomimi-chat-bubble {
+    background: #fff;
+    color: #1a2e28;
+    box-shadow: 0 1px 4px rgba(26, 67, 50, 0.06);
+    border: 1px solid rgba(26, 67, 50, 0.06);
+}
+
+.nekomimi-chat-bubble a {
+    color: var(--brand-orange);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.nekomimi-chat-bubble a:hover {
+    text-decoration: underline;
+    color: var(--brand-orange-hover);
+}
+
+.nekomimi-chat-row.outgoing .nekomimi-chat-bubble {
+    background: var(--brand-green);
+    color: #fff;
+    border-bottom-right-radius: 6px;
+}
+
+.nekomimi-chat-row.outgoing .nekomimi-chat-bubble-avatar {
+    display: flex;
+    order: 2;
+}
+
+.nekomimi-chat-feedback {
+    display: flex;
+    gap: 0.25rem;
+    margin-top: 0.35rem;
+    justify-content: flex-end;
+    opacity: 0.65;
+}
+
+.nekomimi-chat-feedback button {
+    border: none;
+    background: transparent;
+    padding: 0.15rem;
+    cursor: pointer;
+    color: inherit;
+    border-radius: 6px;
+}
+
+.nekomimi-chat-feedback button:hover {
+    background: rgba(26, 67, 50, 0.06);
+}
+
+.nekomimi-chat-composer {
+    padding: 0.5rem 0.65rem 0.65rem;
+    background: #fff;
+    border-top: 1px solid rgba(26, 67, 50, 0.08);
+}
+
+.nekomimi-chat-composer-inner {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.nekomimi-chat-tool {
+    border: none;
+    background: transparent;
+    color: var(--brand-green);
+    opacity: 0.45;
+    padding: 0.35rem;
+    cursor: not-allowed;
+}
+
+.nekomimi-chat-input-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: var(--input-bg);
+    border-radius: 999px;
+    padding: 0.2rem 0.5rem 0.2rem 0.95rem;
+    min-width: 0;
+}
+
+.nekomimi-chat-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 0.9rem;
+    padding: 0.45rem 0.25rem;
+    outline: none;
+    min-width: 0;
+}
+
+.nekomimi-chat-emoji {
+    border: none;
+    background: transparent;
+    color: var(--brand-green);
+    opacity: 0.5;
+    padding: 0.35rem;
+    cursor: not-allowed;
+}
+
+.nekomimi-chat-send-ai {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: var(--brand-orange);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.nekomimi-chat-send-ai:hover {
+    background: var(--brand-orange-hover);
+    color: #fff;
+}
+
+.nekomimi-chat-send-ai:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.nekomimi-chat-sidebar-right {
+    background: #fff;
+    background-image: none;
+    border-left: 1px solid rgba(26, 67, 50, 0.08);
+    overflow-y: auto;
+}
+
+.nekomimi-chat-profile {
+    padding: 1rem 0.85rem;
+    text-align: center;
+    background: #fff;
+    background-image: none;
+}
+
+.nekomimi-chat-profile-avatar {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 0.65rem;
+    border-radius: 50%;
+    background: linear-gradient(145deg, var(--brand-cream-deep), #fff);
+    border: 3px solid var(--brand-orange);
+    color: var(--brand-orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    overflow: hidden;
+}
+
+.nekomimi-chat-profile-avatar .chat-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+}
+
+.nekomimi-chat-profile-name {
+    font-weight: 700;
+    color: var(--brand-green);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.nekomimi-chat-verified {
+    color: var(--brand-orange) !important;
+    font-size: 1rem;
+}
+
+.nekomimi-chat-profile-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.nekomimi-chat-profile-btn {
+    border: none;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.68rem;
+    color: #5c6f66;
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.nekomimi-chat-profile-btn i {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--brand-cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: var(--brand-green);
+}
+
+.nekomimi-chat-details {
+    text-align: left;
+    border-top: 1px solid rgba(26, 67, 50, 0.08);
+    padding: 0.65rem 0;
+    font-size: 0.82rem;
+    color: var(--brand-green);
+}
+
+.nekomimi-chat-details summary {
+    cursor: pointer;
+    font-weight: 600;
+    list-style: none;
+}
+
+.nekomimi-chat-details summary::-webkit-details-marker {
+    display: none;
+}
+
+.nekomimi-chat-details summary::after {
+    content: "›";
+    float: right;
+    transform: rotate(90deg);
+    opacity: 0.5;
+}
+
+.nekomimi-chat-details[open] summary::after {
+    transform: rotate(-90deg);
+}
+
+@media (max-width: 540px) {
+    .nekomimi-chat-panel {
+        left: 0.75rem;
+        right: 0.75rem;
+        width: auto;
+        bottom: calc(var(--nekomimi-stack-above-backtop) + 44px + 8px + var(--nekomimi-fab-size) + 8px);
+        height: min(72vh, 520px);
+    }
+
+    .nekomimi-chat-fab {
+        right: 0.85rem;
+    }
+}
+
+/* ── Trang Bác sĩ thú y ──────────────────────────────────── */
+.vet-hero {
+    background: linear-gradient(135deg, var(--brand-green) 0%, #2a5c45 100%);
+    color: #fff;
+    padding: 2rem 0;
+    margin-bottom: 0;
+    border-radius: 0 0 24px 24px;
+}
+
+.vet-hero-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.vet-hero-sub {
+    opacity: 0.85;
+    font-size: 1rem;
+}
+
+.vet-tabs {
+    border-bottom: 2px solid #e9ecef;
+    gap: 0.5rem;
+}
+
+.vet-tabs .nav-link {
+    border: none;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    color: #6c757d;
+    font-weight: 600;
+    padding: 0.6rem 1.25rem;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.vet-tabs .nav-link:hover {
+    color: var(--brand-green);
+    border-bottom-color: #dee2e6;
+}
+
+.vet-tabs .nav-link.active {
+    color: var(--brand-green);
+    border-bottom-color: var(--brand-orange);
+    background: none;
+}
+
+/* Filter bar */
+.vet-filter-bar {
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+}
+
+/* Vet card */
+.vet-card {
+    border: 1px solid #e9ecef;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+.vet-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+}
+
+.vet-card-body-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    flex-grow: 1;
+}
+
+.vet-card-body-link:hover {
+    color: inherit;
+}
+
+.vet-card-header {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 1.5rem 1rem 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.vet-avatar-wrap {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    display: inline-block;
+}
+
+.vet-avatar-img {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.vet-avatar-initials {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--brand-green);
+    color: #fff;
+    font-size: 1.6rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.vet-online-dot {
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    width: 14px;
+    height: 14px;
+    background: #28a745;
+    border: 2px solid #fff;
+    border-radius: 50%;
+}
+
+.vet-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--brand-green);
+}
+
+.vet-card-body {
+    padding: 1rem;
+    flex-grow: 1;
+}
+
+.vet-stats {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.vet-stat-item {
+    font-size: 0.82rem;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.vet-clinic {
+    font-size: 0.82rem;
+}
+
+.vet-location {
+    font-size: 0.82rem;
+}
+
+.vet-card-footer {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid #f0f0f0;
+    background: #fff;
+}
+
+/* FAQ accordion */
+.vet-faq-accordion {
+    --bs-accordion-border-color: #e9ecef;
+    --bs-accordion-border-radius: 12px;
+    --bs-accordion-inner-border-radius: 12px;
+}
+
+.vet-faq-accordion .accordion-button {
+    font-size: 0.95rem;
+    border-radius: 12px !important;
+}
+
+.vet-faq-accordion .accordion-button:not(.collapsed) {
+    background: #f0f7f4;
+    color: var(--brand-green);
+    box-shadow: none;
+}
+
+.vet-faq-accordion .accordion-button:focus {
+    box-shadow: none;
+    border-color: #e9ecef;
+}
+
+.vet-faq-accordion .accordion-body {
+    padding: 1rem 1.25rem;
+}
+
+.faq-item {
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.faq-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+.faq-q {
+    font-size: 0.88rem;
+    margin-bottom: 0.25rem;
+    color: #212529;
+}
+
+.faq-a {
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 576px) {
+    .vet-hero-title { font-size: 1.4rem; }
+    .vet-card-footer .btn { font-size: 0.8rem; }
+}
+
+/* ── Trang Profile Bác sĩ ────────────────────────────────── */
+.vp-hero {
+    background: linear-gradient(135deg, var(--brand-green) 0%, #2a5c45 100%);
+    color: #fff;
+    padding: 2rem 0 2.5rem;
+    border-radius: 0 0 24px 24px;
+}
+
+.vp-back:hover { color: #fff !important; }
+
+.vp-hero-inner {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.vp-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.vp-avatar-img,
+.vp-avatar-initials {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid rgba(255,255,255,0.3);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.vp-avatar-initials {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 2.2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.vp-online-dot {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    width: 18px;
+    height: 18px;
+    background: #28a745;
+    border: 3px solid #fff;
+    border-radius: 50%;
+}
+
+.vp-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.vp-verified {
+    color: #4fc3f7;
+    font-size: 1.2rem;
+}
+
+.vp-spec {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.85);
+    margin: 0;
+}
+
+.vp-location {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.7);
+    margin: 0;
+}
+
+.vp-btn-chat {
+    background: #fff;
+    color: var(--brand-green);
+    font-weight: 600;
+    border-radius: 50px;
+    padding: 0.6rem 1.5rem;
+    white-space: nowrap;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.vp-btn-chat:hover {
+    background: #f0f0f0;
+    color: var(--brand-green);
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Cards */
+.vp-card {
+    border: 1px solid #e9ecef;
+    border-radius: 16px;
+    padding: 1.5rem;
+    background: #fff;
+}
+
+.vp-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--brand-green);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.vp-info-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.vp-info-table tr:not(:last-child) {
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.vp-info-table td {
+    padding: 0.6rem 0;
+    vertical-align: top;
+}
+
+.vp-info-label {
+    width: 45%;
+    color: #6c757d;
+    font-size: 0.88rem;
+}
+
+/* Stats row */
+.vp-stats-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.vp-stat-card {
+    flex: 1;
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1rem 0.75rem;
+    text-align: center;
+}
+
+.vp-stat-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.25rem;
+    color: var(--brand-green);
+}
+
+.vp-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--brand-green);
+    line-height: 1.2;
+}
+
+.vp-stat-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-top: 0.1rem;
+}
+
+/* Questions list */
+.vp-questions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.vp-question-item {
+    display: block;
+    padding: 0.75rem;
+    border: 1px solid #f0f0f0;
+    border-radius: 10px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.vp-question-item:hover {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    color: inherit;
+}
+
+.vp-q-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+    padding-top: 2px;
+}
+
+.vp-q-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0.25rem;
+}
+
+.vp-q-meta {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.78rem;
+    color: #6c757d;
+}
+
+.vp-q-cat {
+    background: #e9ecef;
+    padding: 0 0.4rem;
+    border-radius: 4px;
+    text-transform: capitalize;
+}
+
+.vp-bio {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #495057;
+}
+
+@media (max-width: 576px) {
+    .vp-stats-row { flex-wrap: wrap; }
+    .vp-stat-card { min-width: calc(50% - 0.5rem); }
+    .vp-hero-inner { flex-direction: column; align-items: flex-start; }
+}
+
+/* —— Trang tiêm phòng (/pets/{id}/vaccinations) —— */
+.vac-hero {
+    background: linear-gradient(135deg, var(--brand-green) 0%, #2d6a4f 55%, #40916c 100%);
+    color: #fff;
+    padding: 1.5rem 1.5rem;
+    box-shadow: 0 12px 32px rgba(26, 67, 50, 0.22);
+}
+
+.vac-hero-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.vac-hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.vac-hero-kicker {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.85;
+    margin: 0;
+}
+
+.vac-hero-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.vac-hero-sub {
+    font-size: 0.88rem;
+    opacity: 0.88;
+    margin-top: 0.25rem;
+}
+
+.vac-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.vac-btn-primary {
+    background: #ffcc33;
+    border: none;
+    color: #1a1a1a;
+    font-weight: 600;
+}
+
+.vac-btn-primary:hover {
+    background: #f2b800;
+    color: #1a1a1a;
+}
+
+.vac-stat-tile {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.1rem 1.15rem;
+    border-radius: 14px;
+    border: 1px solid #e9ecef;
+    background: #fff;
+    height: 100%;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.vac-stat-tile--total {
+    border-left: 4px solid var(--brand-green);
+}
+
+.vac-stat-tile--month {
+    border-left: 4px solid #0d6efd;
+}
+
+.vac-stat-tile--soon {
+    border-left: 4px solid #fd7e14;
+}
+
+.vac-stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #f0f7f4;
+    color: var(--brand-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.vac-stat-tile--month .vac-stat-icon {
+    background: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+.vac-stat-tile--soon .vac-stat-icon {
+    background: rgba(253, 126, 20, 0.12);
+    color: #fd7e14;
+}
+
+.vac-stat-value {
+    font-size: 1.65rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--brand-green);
+}
+
+.vac-stat-tile--month .vac-stat-value {
+    color: #0d6efd;
+}
+
+.vac-stat-tile--soon .vac-stat-value {
+    color: #fd7e14;
+}
+
+.vac-stat-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.vac-stat-hint {
+    font-size: 0.72rem;
+    color: #868e96;
+    margin-top: 0.15rem;
+    line-height: 1.35;
+}
+
+.vac-card {
+    position: relative;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.vac-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
+}
+
+.vac-card-accent {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--brand-green);
+}
+
+.vac-card--soon .vac-card-accent {
+    background: #ffc107;
+}
+
+.vac-card--overdue .vac-card-accent {
+    background: #dc3545;
+}
+
+.vac-card--soon {
+    background: linear-gradient(180deg, #fffdf5 0%, #fff 40%);
+}
+
+.vac-card--overdue {
+    background: linear-gradient(180deg, #fff8f8 0%, #fff 45%);
+}
+
+.vac-card-body {
+    padding: 1.25rem 1.25rem 0.5rem 1.35rem;
+    flex: 1;
+}
+
+.vac-card-title {
+    color: var(--brand-green);
+}
+
+.vac-type-badge {
+    background: #e9ecef !important;
+    color: #495057 !important;
+    font-weight: 500;
+    font-size: 0.7rem;
+}
+
+.vac-meta-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.35rem 0;
+    border-bottom: 1px dashed #eee;
+}
+
+.vac-meta-list li:last-child {
+    border-bottom: none;
+}
+
+.vac-meta-label {
+    color: #6c757d;
+    flex-shrink: 0;
+}
+
+.vac-meta-label i {
+    margin-right: 0.25rem;
+    opacity: 0.8;
+}
+
+.vac-meta-value {
+    font-weight: 600;
+    text-align: right;
+    color: #212529;
+}
+
+.vac-card-footer {
+    padding: 0.75rem 1.25rem 1.1rem 1.35rem;
+    margin-top: auto;
+}
+
+.vac-empty {
+    background: linear-gradient(180deg, #f8faf9 0%, #fff 100%);
+    border: 1px dashed #dee2e6;
+}
+
+.vac-empty-icon {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: rgba(26, 67, 50, 0.08);
+    color: var(--brand-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.25rem;
+}
+
+@media (max-width: 576px) {
+    .vac-hero-title { font-size: 1.25rem; }
+    .vac-hero-actions { width: 100%; }
+    .vac-hero-actions .btn { flex: 1; }
+}
+
+/* Pet health subpages — avatar đồng bộ với danh sách thú cưng */
+.pet-health-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    flex-shrink: 0;
+}
+.pet-health-avatar-ph {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.35rem;
+    flex-shrink: 0;
+}
+.pet-health-grad-dog {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+.pet-health-grad-cat {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+.pet-health-grad-default {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+/* Leaflet: Bootstrap img { max-width: 100% } làm tile OSM co lệch lưới — phải tắt trong .leaflet-container */
+.leaflet-container img.leaflet-tile,
+.leaflet-container .leaflet-marker-icon,
+.leaflet-container .leaflet-marker-shadow,
+.leaflet-container img.leaflet-image-layer {
+    max-width: none !important;
+    max-height: none !important;
+}
+.leaflet-container {
+    z-index: 0;
+    position: relative;
+}

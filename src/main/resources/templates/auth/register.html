@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout-auth :: auth-layout(~{::title}, ~{::#auth-content}, ~{::#auth-scripts})}">
+<head>
+    <title>Đăng ký - Pet Care</title>
+</head>
+<th:block id="auth-content">
+    <nav class="auth-breadcrumb" aria-label="breadcrumb">
+        <a th:href="@{/}">Trang chủ</a>
+        <span class="mx-1">›</span>
+        <span>Đăng ký tài khoản</span>
+    </nav>
+
+    <div class="row justify-content-center py-4 pb-5">
+        <div class="col-md-6 col-lg-5">
+            <div class="card auth-card shadow-none">
+                <div class="card-body">
+                    <h1 class="auth-title text-center">Đăng ký</h1>
+                    <p class="text-center text-muted small mb-4">Tạo tài khoản để quản lý thú cưng và lịch hẹn</p>
+
+                    <form th:action="@{/register}" th:object="${user}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <div class="mb-3">
+                            <label class="form-label">Tên đăng nhập *</label>
+                            <input type="text" th:field="*{username}" class="form-control" required/>
+                            <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="text-danger small"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mật khẩu *</label>
+                            <input type="password" th:field="*{password}" class="form-control" required/>
+                            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger small"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Họ tên *</label>
+                            <input type="text" th:field="*{fullName}" class="form-control" required/>
+                            <div th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}" class="text-danger small"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" th:field="*{email}" class="form-control" required/>
+                            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger small"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="text" th:field="*{phone}" class="form-control"/>
+                        </div>
+                        <button type="submit" class="btn btn-auth-submit">Đăng ký</button>
+                    </form>
+
+                    <p class="text-center mt-3 mb-0">Đã có tài khoản? <a th:href="@{/login}" class="auth-link-muted">Đăng nhập</a></p>
+                    <p class="text-center mt-2 mb-0"><a th:href="@{/forgot-password}" class="auth-link-muted small"><i class="bi bi-question-circle"></i> Quên mật khẩu?</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+<th:block id="auth-scripts">
+    <script>
+    (function () {
+        function removeStuckBootstrapOverlays() {
+            document.querySelectorAll('.modal-backdrop, .offcanvas-backdrop').forEach(function (el) { el.remove(); });
+            document.body.classList.remove('modal-open', 'offcanvas-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+            document.querySelectorAll('.modal.show').forEach(function (m) {
+                m.classList.remove('show');
+                m.style.removeProperty('display');
+                m.setAttribute('aria-hidden', 'true');
+                m.removeAttribute('aria-modal');
+            });
+        }
+        removeStuckBootstrapOverlays();
+        document.addEventListener('DOMContentLoaded', removeStuckBootstrapOverlays);
+        window.addEventListener('pageshow', function (e) {
+            if (e.persisted) removeStuckBootstrapOverlays();
+        });
+    })();
+    </script>
+</th:block>
+</html>

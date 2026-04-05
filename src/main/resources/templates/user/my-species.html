@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Quản lý Loài & Giống - Pet Care</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <style>
+        /* Cả lưới loài nổi phía trên hàng «Truy cập nhanh» — tránh dropdown giống bị thẻ Bác sĩ thú y đè */
+        #speciesGrid {
+            position: relative;
+            z-index: 5;
+        }
+        main .species-page-quick-links {
+            position: relative;
+            z-index: 1;
+        }
+        .species-card { transition: transform 0.2s, box-shadow 0.2s; border: 1px solid rgba(26, 67, 50, 0.08); border-radius: 14px; }
+        .species-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(26, 67, 50, 0.12); }
+        .species-card .dropdown-menu.breed-dropdown-menu {
+            z-index: 1046;
+        }
+        .breed-dropdown-menu { border-radius: 12px; }
+        .breed-dropdown-scroll { max-height: 240px; overflow-y: auto; }
+        .breed-dropdown-row { cursor: default; white-space: normal; }
+        .breed-dropdown-row:hover { background-color: rgba(26, 67, 50, 0.06); }
+        .quick-link-card {
+            border-radius: 14px; border: 1px solid rgba(26, 67, 50, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .quick-link-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    </style>
+</head>
+<body class="theme-body">
+<div th:replace="~{fragments/nav :: nav ('/my-species')}"></div>
+
+<main class="container py-4 site-main" style="margin-bottom: 4rem;">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-flower1 text-success"></i> Quản lý Loài & Giống</h2>
+            <p class="text-muted small mb-0">Thêm loài và giống thú cưng tùy chỉnh cho riêng bạn</p>
+        </div>
+        <div>
+            <a th:href="@{/pets}" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left"></i> Thú cưng
+            </a>
+            <a th:href="@{/my-species/add}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Thêm loài
+            </a>
+        </div>
+    </div>
+
+    <!-- Alert -->
+    <div id="alertBox" class="alert alert-success alert-dismissible fade show d-none" role="alert">
+        <span id="alertText"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Alert from redirect (Thymeleaf flash) -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Loading -->
+    <div id="loadingState" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Đang tải...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="text-center py-5 d-none">
+        <i class="bi bi-flower1 fs-1 text-muted"></i>
+        <h5 class="mt-3">Chưa có loài nào</h5>
+        <p class="text-muted">Bắt đầu bằng cách thêm loài đầu tiên của bạn</p>
+        <a th:href="@{/my-species/add}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Thêm loài đầu tiên
+        </a>
+    </div>
+
+    <!-- Species Grid -->
+    <div id="speciesGrid" class="row g-4 d-none"></div>
+
+    <!-- Truy cập nhanh (z-index thấp hơn #speciesGrid để không che dropdown giống) -->
+    <div class="row mt-5 pt-3 border-top species-page-quick-links">
+        <div class="col-12 mb-3">
+            <h5 class="text-muted small text-uppercase mb-0">Truy cập nhanh</h5>
+        </div>
+        <div class="col-md-4 mb-3">
+            <a th:href="@{/vet-qa}" class="card quick-link-card text-decoration-none h-100 text-body">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-award text-primary" style="font-size: 2.5rem;"></i>
+                    <h5 class="mt-3 mb-1">Bác sĩ thú y</h5>
+                    <p class="text-muted small mb-0">Tìm bác sĩ và chat trực tiếp</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 mb-3">
+            <a th:href="@{/health/dashboard}+'#healthTrendsSection'" class="card quick-link-card text-decoration-none h-100 text-body">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-graph-up-arrow text-success" style="font-size: 2.5rem;"></i>
+                    <h5 class="mt-3 mb-1">Xu hướng sức khỏe</h5>
+                    <p class="text-muted small mb-0">Theo dõi cân nặng, chỉ số</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 mb-3">
+            <a th:href="@{/health/dashboard}+'#nutritionSection'" class="card quick-link-card text-decoration-none h-100 text-body">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-egg-fried text-warning" style="font-size: 2.5rem;"></i>
+                    <h5 class="mt-3 mb-1">Dinh dưỡng</h5>
+                    <p class="text-muted small mb-0">Kế hoạch ăn uống &amp; lời khuyên</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+<script th:inline="javascript">
+var csrfEl = document.querySelector('input[name="_csrf"]');
+var csrfToken = csrfEl ? csrfEl.value : '';
+var csrfParam = csrfEl ? '_csrf=' + encodeURIComponent(csrfToken) : '';
+
+document.addEventListener('DOMContentLoaded', function() {
+    var grid = document.getElementById('speciesGrid');
+    if (grid) {
+        grid.addEventListener('shown.bs.dropdown', function(ev) {
+            var wrap = ev.target.closest ? ev.target.closest('.dropdown') : null;
+            if (!wrap && ev.target.classList && ev.target.classList.contains('dropdown')) wrap = ev.target;
+            if (!wrap) return;
+            var menu = wrap.querySelector('.breed-dropdown-menu');
+            var listEl = wrap.querySelector('.breed-list-container');
+            if (!menu || !listEl) return;
+            var speciesId = menu.getAttribute('data-species-id');
+            if (speciesId) loadBreedsIntoContainer(speciesId, listEl);
+        });
+        grid.addEventListener('click', function(e) {
+            var addBtn = e.target.closest('.breed-add-btn');
+            if (addBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                addBreedFromDropdown(addBtn);
+                return;
+            }
+            var delBtn = e.target.closest('.breed-delete-btn');
+            if (delBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                var sid = parseInt(delBtn.getAttribute('data-species-id'), 10);
+                var bid = parseInt(delBtn.getAttribute('data-breed-id'), 10);
+                if (sid && bid) deleteBreed(sid, bid);
+            }
+        });
+        grid.addEventListener('keydown', function(e) {
+            if (e.key !== 'Enter') return;
+            var inp = e.target.closest('.breed-add-input');
+            if (!inp) return;
+            e.preventDefault();
+            e.stopPropagation();
+            var grp = inp.closest('.breed-dropdown-menu');
+            if (!grp) return;
+            var btn = grp.querySelector('.breed-add-btn');
+            if (btn) addBreedFromDropdown(btn);
+        }, true);
+    }
+    loadSpecies();
+});
+
+function showAlert(msg, type) {
+    var box = document.getElementById('alertBox');
+    var text = document.getElementById('alertText');
+    if (!box || !text) return;
+    box.className = 'alert alert-' + type + ' alert-dismissible fade show';
+    text.textContent = msg;
+    box.classList.remove('d-none');
+    setTimeout(function() { box.classList.add('d-none'); }, 4000);
+}
+
+function loadSpecies() {
+    var loading = document.getElementById('loadingState');
+    var grid = document.getElementById('speciesGrid');
+    var empty = document.getElementById('emptyState');
+    if (loading) loading.classList.remove('d-none');
+    if (grid) grid.classList.add('d-none');
+    if (empty) empty.classList.add('d-none');
+
+    fetch('/api/user-species?' + csrfParam, {
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json' }
+    }).then(function(r) {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+    }).then(function(data) {
+        if (loading) loading.classList.add('d-none');
+        if (!data || data.length === 0) {
+            if (empty) empty.classList.remove('d-none');
+            return;
+        }
+        renderSpecies(data);
+        if (grid) grid.classList.remove('d-none');
+    }).catch(function() {
+        if (loading) loading.classList.add('d-none');
+        showAlert('Không tải được danh sách loài', 'danger');
+    });
+}
+
+function renderSpecies(speciesList) {
+    var grid = document.getElementById('speciesGrid');
+    grid.innerHTML = '';
+    speciesList.forEach(function(s) {
+        var card = document.createElement('div');
+        card.className = 'col-sm-6 col-lg-4';
+        card.innerHTML =
+            '<div class="card species-card h-100 shadow-sm" data-species-card-id="' + s.id + '">' +
+                '<div class="card-body">' +
+                    '<div class="d-flex align-items-start justify-content-end mb-2">' +
+                        '<div class="btn-group btn-group-sm flex-shrink-0">' +
+                            '<div class="dropdown" data-bs-auto-close="outside">' +
+                                '<button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" title="Danh sách giống">' +
+                                    '<i class="bi bi-list-ul"></i> Giống' +
+                                    '<span class="badge bg-primary ms-1">' + (s.breedCount || 0) + '</span>' +
+                                '</button>' +
+                                '<div class="dropdown-menu dropdown-menu-end breed-dropdown-menu p-0 shadow" style="min-width: 300px; max-width: 340px;" data-species-id="' + s.id + '">' +
+                                    '<div class="px-3 py-2 border-bottom small fw-semibold text-body">' +
+                                        '<i class="bi bi-tag text-success"></i> Giống: ' + escHtml(s.name) + '</div>' +
+                                    '<div class="px-2 py-2 border-bottom bg-light bg-opacity-50">' +
+                                        '<div class="input-group input-group-sm">' +
+                                            '<input type="text" class="form-control breed-add-input" placeholder="Tên giống mới..." aria-label="Tên giống mới"/>' +
+                                            '<button type="button" class="btn btn-success breed-add-btn" title="Thêm giống"><i class="bi bi-plus-lg"></i></button>' +
+                                        '</div>' +
+                                    '</div>' +
+                                    '<div class="breed-list-container breed-dropdown-scroll" data-species-id="' + s.id + '"></div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<a class="btn btn-outline-secondary" href="/my-species/' + s.id + '/edit" title="Sửa">' +
+                                '<i class="bi bi-pencil"></i>' +
+                            '</a>' +
+                            '<button type="button" class="btn btn-outline-danger" onclick="deleteSpecies(' + s.id + ')" title="Xóa">' +
+                                '<i class="bi bi-trash"></i>' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>' +
+                    '<h5 class="card-title mb-2 fw-semibold">' + escHtml(s.name) + '</h5>' +
+                    '<p class="text-muted small mb-3">' + escHtml(s.description || 'Không có mô tả') + '</p>' +
+                    '<div class="text-muted small border-top pt-2 species-breed-count-line">' +
+                        '<i class="bi bi-collection"></i> <span class="species-breed-count-num">' + (s.breedCount || 0) + '</span> giống' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        grid.appendChild(card);
+    });
+}
+
+function escHtml(s) {
+    if (!s) return '';
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+function deleteSpecies(id) {
+    if (!confirm('Xóa loài này? Tất cả giống bên trong cũng sẽ bị xóa.')) return;
+    fetch('/api/user-species/' + id + '?' + csrfParam, {
+        method: 'DELETE',
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json' }
+    }).then(function(r) {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+    }).then(function() {
+        showAlert('Đã xóa loài!', 'success');
+        loadSpecies();
+    }).catch(function() {
+        showAlert('Lỗi khi xóa.', 'danger');
+    });
+}
+
+// ── Breed dropdown (giống thông báo) ──────────────────────────
+
+/** Cập nhật badge + dòng chân thẻ, không gọi loadSpecies (tránh DOM rebuild → đóng dropdown). */
+function adjustBreedCountInCard(speciesId, delta) {
+    var menu = document.querySelector('.breed-dropdown-menu[data-species-id="' + speciesId + '"]');
+    if (!menu) return;
+    var card = menu.closest('[data-species-card-id]');
+    if (!card) return;
+    var badge = card.querySelector('.dropdown-toggle .badge.bg-primary');
+    var numEl = card.querySelector('.species-breed-count-num');
+    var cur = badge ? parseInt(badge.textContent, 10) : 0;
+    if (isNaN(cur)) cur = 0;
+    var next = Math.max(0, cur + delta);
+    if (badge) badge.textContent = String(next);
+    if (numEl) numEl.textContent = String(next);
+}
+
+function loadBreedsIntoContainer(speciesId, containerEl) {
+    if (!containerEl) return;
+    containerEl.innerHTML =
+        '<div class="text-center py-3"><span class="spinner-border spinner-border-sm text-primary" role="status"></span></div>';
+    fetch('/api/user-species/' + speciesId + '/breeds?' + csrfParam, {
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { 'Accept': 'application/json' }
+    }).then(function(r) {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+    })
+    .then(function(data) {
+        if (!Array.isArray(data)) {
+            containerEl.innerHTML = '<p class="text-danger text-center small px-2 py-3 mb-0">Lỗi tải danh sách giống</p>';
+            return;
+        }
+        if (data.length === 0) {
+            containerEl.innerHTML =
+                '<div class="px-3 py-4 text-center text-muted small">' +
+                '<i class="bi bi-inbox d-block fs-4 mb-2"></i>Chưa có giống nào</div>';
+            return;
+        }
+        containerEl.innerHTML = data.map(function(b) {
+            return '<div class="dropdown-item breed-dropdown-row d-flex align-items-center justify-content-between gap-2 py-2 px-3">' +
+                '<span class="small text-truncate flex-grow-1 me-1">' + escHtml(b.name) + '</span>' +
+                '<button type="button" class="btn btn-sm btn-link text-danger p-0 flex-shrink-0 breed-delete-btn" data-species-id="' + speciesId + '" data-breed-id="' + b.id + '" title="Xóa giống">' +
+                '<i class="bi bi-x-lg"></i></button></div>';
+        }).join('');
+    }).catch(function() {
+        containerEl.innerHTML = '<p class="text-danger text-center small px-2 py-3 mb-0">Lỗi tải danh sách giống</p>';
+    });
+}
+
+function addBreedFromDropdown(addBtn) {
+    var menu = addBtn.closest('.breed-dropdown-menu');
+    if (!menu) return;
+    var speciesId = menu.getAttribute('data-species-id');
+    var input = menu.querySelector('.breed-add-input');
+    var listEl = menu.querySelector('.breed-list-container');
+    if (!speciesId || !input) return;
+    var name = input.value.trim();
+    if (!name) return;
+
+    fetch('/api/user-species/' + speciesId + '/breeds?' + csrfParam, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
+        },
+        body: 'name=' + encodeURIComponent(name) + '&' + csrfParam
+    }).then(function(r) {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+    }).then(function() {
+        input.value = '';
+        adjustBreedCountInCard(speciesId, 1);
+        if (listEl) loadBreedsIntoContainer(speciesId, listEl);
+        showAlert('Đã thêm giống: ' + name, 'success');
+    }).catch(function() {
+        showAlert('Lỗi khi thêm giống', 'danger');
+    });
+}
+
+function deleteBreed(speciesId, breedId) {
+    if (!confirm('Xóa giống này?')) return;
+    fetch('/api/user-species/' + speciesId + '/breeds/' + breedId + '?' + csrfParam, {
+        method: 'DELETE',
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json' }
+    }).then(function(r) {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+    }).then(function() {
+        adjustBreedCountInCard(speciesId, -1);
+        var el = document.querySelector('.breed-list-container[data-species-id="' + speciesId + '"]');
+        if (el) loadBreedsIntoContainer(speciesId, el);
+    });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Báo cáo thú cưng - Pet Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .container { max-width: 100% !important; }
+            footer { display: none !important; }
+        }
+        .report-header {
+            border-bottom: 2px solid #0d6efd;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container py-4">
+
+    <!-- Print Header -->
+    <div class="no-print mb-4">
+        <a th:href="@{/reports}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Quay lại
+        </a>
+        <button type="button" onclick="window.print()" class="btn btn-primary">
+            <i class="bi bi-printer"></i> In báo cáo
+        </button>
+        <a th:href="@{/reports/pets/excel}" class="btn btn-success">
+            <i class="bi bi-file-earmark-excel"></i> Xuất Excel
+        </a>
+    </div>
+
+    <!-- Report Content -->
+    <div class="report-header">
+        <h2 class="text-primary mb-1">
+            <i class="bi bi-heart"></i> PET MANAGEMENT SYSTEM
+        </h2>
+        <h4>BÁO CÁO DANH SÁCH THÚ CƯNG</h4>
+        <p class="text-muted mb-0">
+            Ngày xuất báo cáo: <span th:text="${reportDate}"></span> |
+            Tổng số: <span th:text="${totalPets}"></span> thú cưng
+        </p>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center py-3">
+                    <h3 class="mb-0" th:text="${totalPets}">0</h3>
+                    <small>Tổng thú cưng</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center py-3">
+                    <h3 class="mb-0" th:text="${petsCreatedToday}">0</h3>
+                    <small>Thú cưng mới (hôm nay)</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center py-3">
+                    <h3 class="mb-0" th:text="${distinctCategoryCount}">0</h3>
+                    <small>Loại thú cưng (danh mục)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pet Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-primary">
+                    <tr>
+                        <th>STT</th>
+                        <th>Tên</th>
+                        <th>Loài</th>
+                        <th>Giống</th>
+                        <th>Giới tính</th>
+                        <th>Tuổi</th>
+                        <th>Cân nặng</th>
+                        <th>Chủ nuôi</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="pet, iter : ${pets}">
+                        <td th:text="${iter.count}">1</td>
+                        <td>
+                            <strong th:text="${pet.name}"></strong>
+                        </td>
+                        <td th:text="${pet.category != null ? pet.category.name : '-'}">-</td>
+                        <td th:text="${pet.breed != null ? pet.breed.name : '-'}">-</td>
+                        <td>
+                            <span th:if="${pet.gender != null and pet.gender.name() == 'MALE'}">Đực</span>
+                            <span th:if="${pet.gender != null and pet.gender.name() == 'FEMALE'}">Cái</span>
+                            <span th:if="${pet.gender == null}">-</span>
+                        </td>
+                        <td>
+                            <th:block th:if="${pet.dateOfBirth != null}"
+                                      th:with="years=${@dateUtil.yearsBetween(pet.dateOfBirth, @dateUtil.today())}">
+                                <span th:text="${years}">-</span>
+                            </th:block>
+                            <span th:unless="${pet.dateOfBirth != null}">-</span>
+                        </td>
+                        <td th:text="${pet.weight != null ? pet.weight : '-'}">-</td>
+                        <td th:text="${pet.owner != null ? pet.owner.fullName : '-'}">-</td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="(${pet.status?.name() == 'ACTIVE'}) ? 'bg-success' : ((${pet.status?.name() == 'PASSED'}) ? 'bg-secondary' : 'bg-warning text-dark')"
+                                  th:text="(${pet.status?.name() == 'ACTIVE'}) ? 'Đang nuôi' : ((${pet.status?.name() == 'PASSED'}) ? 'Đã mất' : 'Đã chuyển')">
+                            </span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(pets)}">
+                        <td colspan="9" class="text-center py-4 text-muted">
+                            Không có dữ liệu thú cưng
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-4 pt-3 border-top text-center text-muted small">
+        <p class="mb-0">Pet Management System - Báo cáo được xuất tự động</p>
+        <p class="mb-0">Thông tin liên hệ: admin@petmgr.com | ĐT: 0901 234 567</p>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout(~{::title}, ~{::#page-content}, ~{::#page-scripts})}">
+<head>
+    <title>Danh sách bác sĩ thú y - Pet Care</title>
+</head>
+<body>
+<div id="page-content" th:fragment="content">
+
+    <!-- ── Hero ──────────────────────────────────────────── -->
+    <div class="vet-hero">
+        <div class="container">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3">
+                <div>
+                    <h1 class="vet-hero-title mb-1"><i class="bi bi-award-fill"></i> Bác sĩ thú y</h1>
+                    <p class="vet-hero-sub mb-0">Tìm bác sĩ phù hợp cho thú cưng của bạn — chat trực tiếp qua biểu tượng chat góc màn hình.</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+                    <div sec:authorize="isAuthenticated()">
+                    <span th:if="${currentUserVetPending && !currentUserIsVet}"
+                          class="btn btn-light text-dark fw-semibold border border-warning disabled opacity-100 d-none d-sm-inline"
+                          style="cursor: default;">
+                        <i class="bi bi-hourglass-split"></i> Đang chờ duyệt
+                    </span>
+                    <form th:if="${currentUserVetPending && !currentUserIsVet}"
+                          th:action="@{/vet-qa/cancel-pending}" method="post"
+                          style="display:inline"
+                          onsubmit="return confirm('Bạn có chắc muốn hủy yêu cầu đăng ký bác sĩ?');">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit" class="btn btn-light fw-semibold text-danger border-danger">
+                            <i class="bi bi-x-circle"></i> Hủy đăng ký
+                        </button>
+                    </form>
+                    <a th:href="@{/vet-qa/register}" class="btn btn-warning text-dark fw-semibold"
+                       th:if="${!currentUserIsVet && !currentUserVetPending}">
+                        <i class="bi bi-person-plus"></i> Đăng ký trở thành bác sĩ
+                    </a>
+                    <th:block th:if="${currentUserIsVet}">
+                        <a th:href="@{/vet-qa/edit}" class="btn btn-light text-primary border-primary fw-semibold">
+                            <i class="bi bi-pencil-square"></i> Sửa hồ sơ
+                        </a>
+                        <form th:action="@{/vet-qa/unregister}" method="post"
+                              style="display:inline"
+                              onsubmit="return confirm('Bạn có chắc muốn hủy đăng ký bác sĩ?');">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn btn-light fw-semibold text-danger border-danger">
+                                <i class="bi bi-person-dash"></i> Hủy đăng ký
+                            </button>
+                        </form>
+                    </th:block>
+                </div>
+                <a th:href="@{/login}" class="btn btn-outline-light fw-semibold"
+                   sec:authorize="!isAuthenticated()">
+                    <i class="bi bi-box-arrow-in-right"></i> Đăng nhập để đăng ký bác sĩ
+                </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container my-4">
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- ── Tabs: Bác sĩ | FAQ ──────────────────────────── -->
+        <ul class="nav vet-tabs mb-4" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-vets-btn" data-bs-toggle="tab"
+                        data-bs-target="#tab-vets" type="button" role="tab">
+                    <i class="bi bi-person-badge"></i> Bác sĩ
+                    <span class="badge bg-secondary rounded-pill ms-1" th:text="${totalVets}">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-faq-btn" data-bs-toggle="tab"
+                        data-bs-target="#tab-faq" type="button" role="tab">
+                    <i class="bi bi-chat-left-heart"></i> Câu hỏi phổ biến
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+
+            <!-- ══ Tab: Bác sĩ ══════════════════════════════ -->
+            <div class="tab-pane fade show active" id="tab-vets" role="tabpanel">
+
+                <!-- Filter bar -->
+                <div class="vet-filter-bar card mb-4">
+                    <div class="card-body py-3">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom"
+                             sec:authorize="isAuthenticated()" th:if="${!currentUserIsVet}">
+                            <span class="small text-muted mb-0">Bạn là bác sĩ thú y? Đăng ký để khách hàng tìm thấy bạn.</span>
+                            <a th:href="@{/vet-qa/register}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-person-plus"></i> Đăng ký bác sĩ
+                            </a>
+                        </div>
+                        <form th:action="@{/vet-qa}" method="get" class="row g-3 align-items-end">
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-medium mb-1">Tìm kiếm</label>
+                                <div class="position-relative">
+                                    <input type="text" name="keyword" class="form-control pe-5"
+                                           placeholder="Tên bác sĩ, phòng khám..."
+                                           th:value="${keyword}">
+                                    <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-2 text-muted"></i>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label small fw-medium mb-1">Chuyên ngành</label>
+                                <select name="specialization" class="form-select">
+                                    <option value="">-- Tất cả --</option>
+                                    <option th:each="sp : ${specializations}"
+                                            th:value="${sp}"
+                                            th:text="${sp}"
+                                            th:selected="${selectedSpecialization == sp}">Chuyên ngành</option>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label small fw-medium mb-1">Tỉnh / Thành phố</label>
+                                <select name="province" class="form-select">
+                                    <option value="">-- Tất cả --</option>
+                                    <option th:each="p : ${provinces}"
+                                            th:value="${p}"
+                                            th:text="${p}"
+                                            th:selected="${selectedProvince == p}">Tỉnh/TP</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-2 d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-funnel"></i> Lọc
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Results grid -->
+                <div class="row g-3" th:if="${!vets.isEmpty()}">
+                    <div class="col-12 col-sm-6 col-lg-4 col-xl-3"
+                         th:each="vet : ${vets}"
+                         th:with="cardAvatarUrl=${vetCardAvatarUrls.get(vet.id)}">
+                        <div class="vet-card h-100">
+                            <a th:href="@{/vet/{id}(id=${vet.id})}" class="vet-card-body-link">
+                            <div class="vet-card-header text-center">
+                                <div class="vet-avatar-wrap mx-auto">
+                                    <img th:if="${cardAvatarUrl != null}"
+                                         th:src="${cardAvatarUrl}"
+                                         th:data-initial="${avatarUrls.nameInitial(vet.fullName)}"
+                                         alt=""
+                                         class="vet-avatar-img"
+                                         referrerpolicy="no-referrer"
+                                         loading="lazy"
+                                         decoding="async"
+                                         onerror="var i=this.dataset.initial||'?';var s=document.createElement('span');s.className='vet-avatar-initials';s.textContent=i;this.replaceWith(s);">
+                                    <span th:unless="${cardAvatarUrl != null}"
+                                          class="vet-avatar-initials"
+                                          th:text="${avatarUrls.nameInitial(vet.fullName)}">B</span>
+                                    <span class="vet-online-dot"></span>
+                                </div>
+                                <h5 class="vet-name mt-2 mb-0" th:text="${vet.fullName}">BS. Nguyễn Văn A</h5>
+                                <p class="vet-spec small text-muted mb-0" th:text="${vet.specialization ?: 'Chuyên khoa tổng hợp'}">Chuyên ngành</p>
+                            </div>
+                            <div class="vet-card-body">
+                                <div class="vet-stats">
+                                    <span class="vet-stat-item">
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                        <span th:text="${vet.rating != null ? #numbers.formatDecimal(vet.rating, 1, 1) : '0.0'}">4.8</span>
+                                        (<span th:text="${vet.ratingCount ?: 0}">12</span>)
+                                    </span>
+                                    <span class="vet-stat-item" th:if="${vet.yearsExperience > 0}">
+                                        <i class="bi bi-briefcase text-info"></i>
+                                        <span th:text="${vet.yearsExperience + ' năm'}">5 năm</span>
+                                    </span>
+                                </div>
+                                <p class="vet-clinic small text-muted mb-2"
+                                   th:if="${vet.clinicName != null and !vet.clinicName.isEmpty()}"
+                                   th:text="${vet.clinicName}">
+                                    Phòng khám Thú Y PetCare
+                                </p>
+                                <p class="vet-location small text-muted mb-0"
+                                   th:if="${vet.province != null or vet.city != null}">
+                                    <i class="bi bi-geo-alt"></i>
+                                    <span th:text="${(vet.city != null ? vet.city : '') + (vet.province != null and vet.city != null ? ', ' : '') + (vet.province != null ? vet.province : '')}">TP. Hồ Chí Minh</span>
+                                </p>
+                            </div>
+                            </a>
+                            <div class="vet-card-footer">
+                                <a th:if="${currentUserId != null and currentUserId.equals(vet.id)}"
+                                   th:href="@{/vet/{id}(id=${vet.id})}"
+                                   class="btn btn-sm btn-outline-primary w-100">
+                                    <i class="bi bi-person-vcard"></i> Thông tin hồ sơ
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-primary w-100 vet-chat-btn"
+                                        th:unless="${currentUserId != null and currentUserId.equals(vet.id)}"
+                                        th:data-vet-id="${vet.id}"
+                                        sec:authorize="isAuthenticated()">
+                                    <i class="bi bi-chat-dots"></i> Nhắn tin
+                                </button>
+                                <a th:href="@{/login}" class="btn btn-sm btn-outline-primary w-100"
+                                   sec:authorize="!isAuthenticated()">
+                                    <i class="bi bi-chat-dots"></i> Nhắn tin
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty state -->
+                <div class="text-center py-5 text-muted" th:if="${vets.isEmpty()}">
+                    <i class="bi bi-person-x fs-1 d-block mb-3"></i>
+                    <p class="mb-1">Chưa có bác sĩ nào được tìm thấy.</p>
+                    <p class="small">Thử thay đổi bộ lọc hoặc <a th:href="@{/vet-qa}">xem tất cả</a>.</p>
+                </div>
+
+                <!-- Pagination -->
+                <nav th:if="${totalPages > 1}" class="mt-4">
+                    <ul class="pagination justify-content-center flex-wrap">
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                            <a class="page-link" th:href="@{/vet-qa(page=${currentPage - 1}, keyword=${keyword}, specialization=${selectedSpecialization}, province=${selectedProvince})}">
+                                <i class="bi bi-chevron-left"></i> Trước
+                            </a>
+                        </li>
+                        <li class="page-item"
+                            th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                            th:classappend="${i == currentPage} ? 'active'">
+                            <a class="page-link"
+                               th:href="@{/vet-qa(page=${i}, keyword=${keyword}, specialization=${selectedSpecialization}, province=${selectedProvince})}"
+                               th:text="${i + 1}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                            <a class="page-link" th:href="@{/vet-qa(page=${currentPage + 1}, keyword=${keyword}, specialization=${selectedSpecialization}, province=${selectedProvince})}">
+                                Sau <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div><!-- /#tab-vets -->
+
+            <!-- ══ Tab: Câu hỏi phổ biến ═════════════════════ -->
+            <div class="tab-pane fade" id="tab-faq" role="tabpanel">
+                <div class="vet-faq-intro mb-4">
+                    <h4 class="mb-1"><i class="bi bi-chat-left-heart text-primary"></i> Câu hỏi phổ biến</h4>
+                    <p class="text-muted mb-0 small">Nhấn vào câu hỏi bất kỳ để xem câu trả lời chi tiết từ bác sĩ thú y.</p>
+                </div>
+
+                <div class="accordion vet-faq-accordion" id="faqAccordion">
+
+                    <!-- GENERAL -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-semibold" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq-general">
+                                <i class="bi bi-question-circle text-primary me-2"></i>
+                                Câu hỏi chung về thú cưng
+                            </button>
+                        </h2>
+                        <div id="faq-general" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <div class="faq-item">
+                                    <p class="faq-q"><i class="bi bi-chat-right-text text-muted me-1"></i>
+                                        <strong>Làm sao biết thú cưng bị bệnh?</strong></p>
+                                    <p class="faq-a small text-muted mb-3">
+                                        Các dấu hiệu thường gặp: bỏ ăn hoặc giảm ăn kéo dài, uống nước nhiều bất thường,
+                                        thay đổi hành vi (lừ đừ, thức giấc giữa đêm), nôn mửa, tiêu chảy,
+                                        rụng lông nhiều, gãi liên tục. Khi thấy bất kỳ dấu hiệu nào kéo dài trên 24h,
+                                        nên đưa thú cưng đến bác sĩ thú y.
+                                    </p>
+                                </div>
+                                <div class="faq-item">
+                                    <p class="faq-q"><i class="bi bi-chat-right-text text-muted me-1"></i>
+                                        <strong>Thú cưng bao nhiêu tuổi thì nên khám sức khỏe định kỳ?</strong></p>
+                                    <p class="faq-a small text-muted mb-3">
+                                        Nên khám sức khỏe định kỳ mỗi 6–12 tháng. Với thú cưng trên 7 tuổi,
+                                        nên khám 2 lần/năm vì nguy cơ mắc bệnh cao hơn.
+                                    </p>
+                                </div>
+                                <div class="faq-item">
+                                    <p class="faq-q"><i class="bi bi-chat-right-text text-muted me-1"></i>
+                                        <strong>Chó mèo có cần tắm thường xuyên không?</strong></p>
+                                    <p class="faq-a small text-muted mb-3">
+                                        Chó nên tắm 1–2 lần/tháng, mèo thường tự vệ sinh và chỉ cần tắm khi thật sự cần thiết
+                                        (dính bẩn, có ve rận). Tắm quá nhiều có thể làm khô da và lông.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NUTRITION -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-semibold" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq-nutrition">
+                                <i class="bi bi-egg-fried text-success me-2"></i>
+                                Dinh dưỡng &amp; Thức ăn
+                            </button>
+                        </h2>
+                        <div id="faq-nutrition" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <div class="faq-item">
+                                    <p class="faq-q"><i class="bi bi-chat-right-text text-muted me-1"></i>
+                                        <strong>Cho chó mèo ăn thức ăn hạt hay đồ nấu sẵn tốt hơn?</strong></p>
+                                    <p class="faq-a small text-muted mb-3">
+                                        Thức ăn hạt chất lượng cao (royal canin, hills, purina pro plan) được phối trộn đủ
+                                        dinh dưỡng và tiện lợi. Thức ăn tự nấu cần đảm bảo cân bằng protein, chất béo,
+                                        vitamin và khoáng chất. Tốt nhất nên kết hợp cả hai theo tư vấn bác sĩ.
+                                    </p>
+                                </div>
+                                <div class="faq-item">
+                                    <p class="faq-q"><i class="bi bi-chat-right-text text-muted me-1"></i>
+                                        <strong>Những thức ăn nào không được cho thú cưng ăn?</strong></p>
+                                    <p class="faq-a small text-muted mb-3">
+                                        Sô cô la, nho, nho khô, hành tỏi, bơ, caffeine, rượu bia,
+                                        xương gà luộc (dễ hóa mảnh), thức ăn quá mặn hoặc nhiều gia vị.
+                                        Các loại cây cảnh trong nhà cũng cần để xa tầm với.
+                                    </p>
+                                </div>
+                                <div class="faq-item">
+                                    <p class="faq-q"><i class="bi bi-chat-right-text text-muted me-1"></i>
+                                        <strong>Chó con cần ăn bao nhiêu bữa một ngày?</strong></p>
+                                    <p class="faq-a small text-muted mb-3">
+                                        Chó con dưới 3 tháng: 4 bữa/ngày. Từ 3–6 tháng: 3 bữa/ngày.
+                                        Từ 6 tháng trở lên: 2 bữa/ngày. Lượng thức ăn tùy theo cân nặng và giống chó.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VACCINATION -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-semibold" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq-vaccination">
+                                <i class="bi bi-shield-check text-danger me-2"></i>
+                                Tiêm phòng &amp; Phòng bệnh
+                            </button>
+                        </h2>
+                        <div id="faq-vaccination" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <div class="faq-item">
+                                    <p class="faq-q"><i class="bi bi-chat-right-text text-muted me-1"></i>
+                                        <strong>Lịch tiêm phòng cho chó con như thế nào?</strong></p>
+                                    <p class="faq-a small text-muted mb-3">
+                                        Mũi 5 bệnh đầu tiên lúc 6–8 tuần, nhắc lại mỗi 2–4 tuần đến 16 tuần tuổi.
+                                        Sau đó tiêm nhắc hàng năm (dại, care, parvo, viêm gan, hoại tử gan).
+                                        Bác sĩ sẽ tư vấn lịch cụ thể theo từng giống.
+                                    </p>
+                                </div>
+                                <div class="faq-item">
+                                    <p class="faq-q"><i class="bi bi-chat-right-text text-muted me-1"></i>
+                                        <strong>Mèo có cần tiêm phòng không?</strong></p>
+                                    <p class="faq-a small text-muted mb-3">
+                                        Có. Mèo cần tiêm phòng mũi phòng dại, mũi 3 bệnh (care cho mèo, viêm mũi, bệnh bạch cầu).
+                                        Mèo con tiêm từ 8 tuần tuổi, nhắc lại hàng năm.
+                                    </p>
+                                </div>
+                                <div class="faq-item">
+                                    <p class="faq-q"><i class="bi bi-chat-right-text text-muted me-1"></i>
+                                        <strong>Tải ve cho chó mèo cần làm gì?</strong></p>
+                                    <p class="faq-a small text-muted mb-3">
+                                        Tẩy giun định kỳ mỗi 3 tháng (với chó con: hàng tháng đến 6 tháng).
+                                        Kết hợp phòng ve rận hàng tháng bằng thuốc nhỏ gáy hoặc viên uống.
+                                        Vệ sinh môi trường sống sạch sẽ.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- HEALTH -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-semibold" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq-health">
+                                <i class="bi bi-heart-pulse text-danger me-2"></i>
+                                Sức khỏe &amp; Bệnh thường gặp
+                            </button>
+                        </h2>
+                        <div id="faq-health" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <div class="faq-item">
+                                    <p class="faq-q"><i class="bi bi-chat-right-text text-muted me-1"></i>
+                                        <strong>Chó bị tiêu chảy có nguy hiểm không?</strong></p>
+                                    <p class="faq-a small text-muted mb-3">
+                                        Tiêu chảy nhẹ do thức ăn có thể tự khỏi sau 1–2 ngày nếu cho nhịn ăn 12–24h
+                                        (vẫn uống nước). Nếu kèm máu, sốt, nôn mửa hoặc kéo dài trên 2 ngày,
+                                        cần đến bác sĩ ngay vì có thể là dấu hiệu bệnh nghiêm trọng.
+                                    </p>
+                                </div>
+                                <div class="faq-item">
+                                    <p class="faq-q"><i class="bi bi-chat-right-text text-muted me-1"></i>
+                                        <strong>Mèo bị nôn do bú lông, có cần lo lắng không?</strong></p>
+                                    <p class="faq-a small text-muted mb-3">
+                                        Nôn bú lông (hairball) là bình thường ở mèo, 1–2 lần/tuần. Nếu nôn thường xuyên,
+                                        có máu, sụt cân hoặc bỏ ăn, cần đưa đi khám. Nên cho mèo ăn thức ăn giúp
+                                        trồng lông (có chất xơ hòa tan) và chải lông thường xuyên.
+                                    </p>
+                                </div>
+                                <div class="faq-item">
+                                    <p class="faq-q"><i class="bi bi-chat-right-text text-muted me-1"></i>
+                                        <strong>Khi nào cần cấp cứu cho thú cưng?</strong></p>
+                                    <p class="faq-a small text-muted mb-3">
+                                        Khó thở, co giật, chảy máu nhiều không cầm được, ngộ độc, gãy xương,
+                                        sốc phản vệ (dị ứng nặng), không đi tiểu được, chó mèo đực đột ngột
+                                        bụng căng và không đi được. Gọi hotline bác sĩ ngay khi thấy các dấu hiệu này.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BEHAVIOR -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-semibold" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq-behavior">
+                                <i class="bi bi-emoji-smile text-warning me-2"></i>
+                                Hành vi &amp; Huấn luyện
+                            </button>
+                        </h2>
+                        <div id="faq-behavior" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <div class="faq-item">
+                                    <p class="faq-q"><i class="bi bi-chat-right-text text-muted me-1"></i>
+                                        <strong>Chó sủa liên tục, phải làm sao?</strong></p>
+                                    <p class="faq-a small text-muted mb-3">
+                                        Chó sủa vì nhiều lý do: buồn chán, muốn thu hút chú ý, lo lắng chia ly,
+                                        hoặc có người lạ. Cần xác định nguyên nhân: đảm bảo đủ vận động,
+                                        huấn luyện lệnh "im lặng", không thưởng khi sủa. Nếu do lo âu,
+                                        cần tư vấn bác sĩ thú y về hành vi.
+                                    </p>
+                                </div>
+                                <div class="faq-item">
+                                    <p class="faq-q"><i class="bi bi-chat-right-text text-muted me-1"></i>
+                                        <strong>Mèo có gãi đồ nội thất, làm sao ngăn?</strong></p>
+                                    <p class="faq-a small text-muted mb-3">
+                                        Mèo gãi để đánh dấu lãnh thổ và kéo móng. Cung cấp cây cào mèo,
+                                        phun catnip lên đó. Dán keo 2 mặt hoặc màng bọc thực phẩm
+                                        lên vị trí không được gãi. Thường xuyên cắt móng và thưởng khi
+                                        mèo dùng cây cào.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- EMERGENCY -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-semibold" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq-emergency">
+                                <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                                Cấp cứu &amp; Sơ cứu
+                            </button>
+                        </h2>
+                        <div id="faq-emergency" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <div class="faq-item">
+                                    <p class="faq-q"><i class="bi bi-chat-right-text text-muted me-1"></i>
+                                        <strong>Chó bị ong đốt cần xử lý thế nào?</strong></p>
+                                    <p class="faq-a small text-muted mb-3">
+                                        Quan sát sốc phản vệ (sưng mặt, khó thở, nôn) — gọi bác sĩ ngay.
+                                        Nếu nhẹ: rửa vùng bị đốt bằng nước lạnh + xà phòng, chườm đá giảm sưng.
+                                        Không bóp nặn vùng ong đốt. Theo dõi 24h.
+                                    </p>
+                                </div>
+                                <div class="faq-item">
+                                    <p class="faq-q"><i class="bi bi-chat-right-text text-muted me-1"></i>
+                                        <strong>Thú cưng bị thương chảy máu, sơ cứu thế nào?</strong></p>
+                                    <p class="faq-a small text-muted mb-3">
+                                        Dùng khăn sạch/ga đè trực tiếp lên vết thương, giữ áp lực 5–10 phút.
+                                        Không tháo băng giữa chừng. Nếu máu phun mạnh (động mạch),
+                                        băng ép và đưa đến bác sĩ ngay. Giữ thú cưng ấm và bình tĩnh.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /.accordion -->
+            </div><!-- /#tab-faq -->
+        </div><!-- /.tab-content -->
+    </div><!-- /.container -->
+</div><!-- /#page-content -->
+
+<th:block id="page-scripts" th:fragment="page-scripts">
+<script>
+// Switch tab to FAQ if URL has ?faq=1
+if (new URLSearchParams(location.search).get('faq') === '1') {
+    var tab = new bootstrap.Tab(document.getElementById('tab-faq-btn'));
+    tab.show();
+}
+
+// ── "Nhắn tin" button on vet cards ──────────────────────
+document.querySelectorAll('.vet-chat-btn').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var vetId = btn.getAttribute('data-vet-id');
+        var csrfEl = document.querySelector('input[name="_csrf"]');
+        var csrfToken = csrfEl ? csrfEl.value : '';
+        fetch('/api/conversations/vet/' + vetId, {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
+        }).then(function (r) {
+            if (!r.ok) throw new Error(r.status);
+            return r.json();
+        }).then(function (data) {
+            window.dispatchEvent(new CustomEvent('nekomimi:open-vet', {
+                detail: {
+                    vetId: parseInt(vetId, 10),
+                    conversationId: data.conversationId,
+                    vetName: data.vetName,
+                    vetSpec: data.vetSpec,
+                    vetAvatar: data.vetAvatar
+                }
+            }));
+        }).catch(function () {
+            alert('Vui lòng đăng nhập để nhắn tin với bác sĩ.');
+        });
+    });
+});
+</script>
+</th:block>
+</body>
+</html>

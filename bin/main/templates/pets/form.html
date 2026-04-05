@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${pet.id != null} ? 'Sửa thú cưng' : 'Thêm thú cưng'">Thêm thú cưng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav}"></div>
+
+<div class="container py-4">
+    <h2 th:text="${pet.id != null} ? 'Sửa thú cưng' : 'Thêm thú cưng mới'">Thêm thú cưng</h2>
+    <form th:action="${pet.id != null} ? @{/pets/{id}(id=${pet.id})} : @{/pets}" th:object="${pet}" method="post" class="mt-4">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Tên thú cưng *</label>
+                <input type="text" th:field="*{name}" class="form-control" required/>
+                <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger small"></div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Loại *</label>
+                <select name="categoryId" class="form-select" required id="categorySelect">
+                    <option value="">-- Chọn loại --</option>
+                    <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}" th:selected="${pet.category != null and pet.category.id == c.id}">Loại</option>
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Giống</label>
+                <select name="breedId" class="form-select" id="breedSelect">
+                    <option value="">-- Chọn giống --</option>
+                    <option th:each="b : ${breeds}" th:value="${b.id}" th:text="${b.name}" th:attr="data-category=${b.category.id}" th:selected="${pet.breed != null and pet.breed.id == b.id}"></option>
+                </select>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Giới tính</label>
+                <select th:field="*{gender}" class="form-select">
+                    <option value="">-- Chọn --</option>
+                    <option value="MALE">Đực</option>
+                    <option value="FEMALE">Cái</option>
+                    <option value="UNKNOWN">Chưa rõ</option>
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Ngày sinh</label>
+                <input type="date" th:field="*{dateOfBirth}" class="form-control"/>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Màu lông</label>
+                <input type="text" th:field="*{color}" class="form-control"/>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Cân nặng (kg)</label>
+                <input type="text" th:field="*{weight}" class="form-control" placeholder="VD: 5.2"/>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Ghi chú</label>
+            <textarea th:field="*{notes}" class="form-control" rows="3"></textarea>
+        </div>
+        <input type="hidden" name="ownerId" th:value="${#authentication.principal?.user != null ? #authentication.principal.user.id : ''}" th:if="${pet.id == null}"/>
+        <input type="hidden" th:field="*{id}" th:if="${pet.id != null}"/>
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button type="submit" class="btn btn-primary">Lưu</button>
+        <a th:href="@{/pets}" class="btn btn-secondary">Hủy</a>
+    </form>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const catSelect = document.getElementById('categorySelect');
+    const breedSelect = document.getElementById('breedSelect');
+    const initialOptions = Array.from(breedSelect.querySelectorAll('option[data-category]')).map(o => ({
+        value: o.value,
+        text: o.text,
+        category: o.dataset.category
+    }));
+    if (catSelect) {
+        catSelect.addEventListener('change', function() {
+            const catId = this.value;
+            breedSelect.innerHTML = '<option value="">-- Chọn giống --</option>';
+            initialOptions.filter(o => o.category == catId).forEach(o => {
+                const opt = document.createElement('option');
+                opt.value = o.value;
+                opt.textContent = o.text;
+                breedSelect.appendChild(opt);
+            });
+        });
+    }
+});
+</script>
+</body>
+</html>

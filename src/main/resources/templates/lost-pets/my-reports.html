@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Báo cáo của tôi - Pet Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <style>
+        .status-active { background-color: #dc3545 !important; }
+        .status-found { background-color: #198754 !important; }
+        .status-closed { background-color: #6c757d !important; }
+        .status-sighting { background-color: #ffc107 !important; color: #212529 !important; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav ('/lost-pets')}"></div>
+
+<div class="container py-4" style="margin-bottom: 4rem;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-search-heart text-danger"></i> Báo cáo thú lạc của tôi</h2>
+        <a th:href="@{/lost-pets/new}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Báo cáo thú lạc
+        </a>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-4" th:if="${!reports.isEmpty()}">
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h3 th:text="${#lists.size(reports)}">0</h3>
+                    <p class="mb-0">Tổng số báo cáo</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3 th:text="${#lists.size(reports.?[#this.status.name() == 'ACTIVE'])}">0</h3>
+                    <p class="mb-0">Đang tìm kiếm</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3 th:text="${#lists.size(reports.?[#this.status.name() == 'FOUND'])}">0</h3>
+                    <p class="mb-0">Đã tìm thấy</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports List -->
+    <div class="row" th:if="${!reports.isEmpty()}">
+        <div class="col-md-6 mb-4" th:each="report : ${reports}">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-github text-danger"></i>
+                            <span th:text="${report.pet?.name ?: 'N/A'}">Tên thú</span>
+                        </h5>
+                        <span th:classappend="${report.status.name() == 'ACTIVE'} ? 'badge status-active' : (${report.status.name() == 'FOUND'} ? 'badge status-found' : (${report.status.name() == 'SIGHTING'} ? 'badge status-sighting' : 'badge status-closed'))"
+                              th:text="${report.status.name() == 'ACTIVE' ? 'Đang tìm' : (report.status.name() == 'FOUND' ? 'Đã tìm thấy' : (report.status.name() == 'SIGHTING' ? 'Có tin nhắn' : 'Đã đóng'))}">
+                            Trạng thái
+                        </span>
+                    </div>
+
+                    <p class="text-muted small mb-2">
+                        <i class="bi bi-calendar"></i>
+                        Mất ngày: <span th:text="${#temporals.format(report.lostDate, 'dd/MM/yyyy')}">--</span>
+                    </p>
+                    <p class="text-muted small mb-2">
+                        <i class="bi bi-geo-alt"></i>
+                        <span th:text="${report.lastSeenLocation ?: 'Chưa có địa điểm'}">Địa điểm</span>
+                    </p>
+                    <p class="text-muted small mb-2" th:if="${report.description}">
+                        <i class="bi bi-card-text"></i>
+                        <span th:text="${#strings.length(report.description) > 100 ? #strings.substring(report.description, 0, 100) + '...' : report.description}">Mô tả</span>
+                    </p>
+                    <p class="small mb-0" th:if="${report.reward != null and report.reward > 0}">
+                        <i class="bi bi-gift text-warning"></i>
+                        <strong>Thưởng:</strong> <span th:text="${#numbers.formatCurrency(report.reward)}">0</span> VNĐ
+                    </p>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="d-flex gap-2">
+                        <a th:href="@{/lost-pets/report/{id}(id=${report.id})}"
+                           class="btn btn-outline-primary btn-sm flex-fill">
+                            <i class="bi bi-eye"></i> Chi tiết
+                        </a>
+                        <a th:if="${report.status.name() == 'ACTIVE'}"
+                           th:href="@{/lost-pets/report/{id}/found(id=${report.id})}"
+                           class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-check-circle"></i> Đánh dấu thấy
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="text-center py-5" th:if="${reports.isEmpty()}">
+        <div class="bg-light d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+             style="width: 100px; height: 100px;">
+            <i class="bi bi-search-heart fs-1 text-muted"></i>
+        </div>
+        <h5 class="text-muted">Bạn chưa có báo cáo nào</h5>
+        <p class="text-muted mb-3">Nếu thú cưng của bạn bị lạc, hãy tạo báo cáo ngay</p>
+        <a th:href="@{/lost-pets/new}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Báo cáo thú lạc
+        </a>
+    </div>
+
+    <!-- Pagination -->
+    <nav th:if="${totalPages > 1}" class="d-flex justify-content-center mt-4">
+        <ul class="pagination mb-0">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/lost-pets/my-reports(page=${currentPage - 1})}">
+                    <i class="bi bi-chevron-left"></i> Trước
+                </a>
+            </li>
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link" th:href="@{/lost-pets/my-reports(page=${i})}" th:text="${i + 1}">1</a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                <a class="page-link" th:href="@{/lost-pets/my-reports(page=${currentPage + 1})}">
+                    Sau <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

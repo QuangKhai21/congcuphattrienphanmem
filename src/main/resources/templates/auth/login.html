@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout-auth :: auth-layout(~{::title}, ~{::#auth-content}, ~{::#auth-scripts})}">
+<head>
+    <title>Đăng nhập - Pet Care</title>
+</head>
+<th:block id="auth-content">
+    <nav class="auth-breadcrumb" aria-label="breadcrumb">
+        <a th:href="@{/}">Trang chủ</a>
+        <span class="mx-1">›</span>
+        <span>Đăng nhập tài khoản</span>
+    </nav>
+
+    <div class="row justify-content-center py-4 pb-5">
+        <div class="col-md-5 col-lg-4">
+            <div class="card auth-card shadow-none">
+                <div class="card-body">
+                    <h1 class="auth-title text-center">Đăng nhập</h1>
+                    <p class="text-center text-muted small mb-4">
+                        Nếu bạn chưa có tài khoản, <a th:href="@{/register}" class="auth-link-muted">đăng ký tại đây</a>
+                    </p>
+
+                    <div th:if="${param.error}" class="alert alert-danger">
+                        <th:block th:switch="${param.error[0]}">
+                            <th:block th:case="'oauth2_no_email'">Đăng nhập Google thất bại: không lấy được email.</th:block>
+                            <th:block th:case="'oauth2_wrong_provider'">Tài khoản này đã đăng ký bằng email/password, không dùng Google.</th:block>
+                            <th:block th:case="'oauth2_failed'">
+                                Đăng nhập Google thất bại sau bước “Tiếp tục”. Thường do <strong>Client Secret</strong> trong
+                                <code>application.properties</code> chưa đúng (vẫn là <code>YOUR_GOOGLE_CLIENT_SECRET</code>) hoặc Google từ chối đổi mã lấy token.
+                                Vào Google Cloud Console → Credentials → OAuth client → tạo/xem Client secret và dán vào
+                                <code>spring.security.oauth2.client.registration.google.client-secret</code>, rồi khởi động lại ứng dụng.
+                            </th:block>
+                            <th:block th:case="*">Tên đăng nhập hoặc mật khẩu không đúng.</th:block>
+                        </th:block>
+                    </div>
+
+                    <div th:if="${success}" class="alert alert-success" th:text="${success}">Đăng ký thành công</div>
+
+                    <form th:action="@{/login}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <div class="mb-3">
+                            <label class="form-label visually-hidden" for="login-username">Tên đăng nhập</label>
+                            <input type="text" name="username" id="login-username" class="form-control" placeholder="Tên đăng nhập" required autofocus/>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label visually-hidden" for="login-password">Mật khẩu</label>
+                            <input type="password" name="password" id="login-password" class="form-control" placeholder="Mật khẩu" required/>
+                        </div>
+                        <button type="submit" class="btn btn-auth-submit">Đăng nhập</button>
+                    </form>
+
+                    <p class="text-center mt-3 mb-0">
+                        <a th:href="@{/forgot-password}" class="auth-link-muted small">Quên mật khẩu</a>
+                    </p>
+
+                    <div class="auth-divider">Hoặc đăng nhập bằng</div>
+
+                    <a th:href="@{/oauth2/authorization/google}" class="btn btn-social-google w-100 py-2 d-flex align-items-center justify-content-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#fff" opacity=".95"/>
+                            <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#fff" opacity=".85"/>
+                            <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#fff" opacity=".75"/>
+                            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#fff" opacity=".65"/>
+                        </svg>
+                        Google
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+<th:block id="auth-scripts">
+    <script>
+    (function () {
+        function removeStuckBootstrapOverlays() {
+            document.querySelectorAll('.modal-backdrop, .offcanvas-backdrop').forEach(function (el) { el.remove(); });
+            document.body.classList.remove('modal-open', 'offcanvas-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+            document.querySelectorAll('.modal.show').forEach(function (m) {
+                m.classList.remove('show');
+                m.style.removeProperty('display');
+                m.setAttribute('aria-hidden', 'true');
+                m.removeAttribute('aria-modal');
+            });
+        }
+        removeStuckBootstrapOverlays();
+        document.addEventListener('DOMContentLoaded', removeStuckBootstrapOverlays);
+        window.addEventListener('pageshow', function (e) {
+            if (e.persisted) removeStuckBootstrapOverlays();
+        });
+    })();
+    </script>
+</th:block>
+</html>

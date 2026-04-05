@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Câu hỏi của tôi - Pet Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav ('/vet-qa')}"></div>
+
+<div class="container py-4" style="margin-bottom: 4rem;">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-chat-left-heart text-primary"></i> Câu hỏi của tôi</h2>
+        <a th:href="@{/vet-qa}" class="btn btn-outline-primary">
+            <i class="bi bi-person-badge"></i> Danh sách bác sĩ
+        </a>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3 th:text="${#lists.size(questions)}">0</h3>
+                    <p class="mb-0">Tổng số câu hỏi</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <a th:href="@{/vet-qa}" class="card text-decoration-none text-dark">
+                <div class="card-body text-center bg-light">
+                    <h3><i class="bi bi-arrow-left"></i></h3>
+                    <p class="mb-0">Quay lại danh sách</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Questions List -->
+    <div class="row" th:if="${!questions.isEmpty()}">
+        <div class="col-12" th:each="q : ${questions}">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <span class="badge bg-secondary mb-2" th:text="${q.category?.name()?.replace('_', ' ') ?: '-'}">Chủ đề</span>
+                            <span th:classappend="${q.status?.name() == 'PENDING'} ? 'badge bg-warning text-dark' : 'badge bg-success'"
+                                  th:text="${q.status?.name() == 'PENDING'} ? 'Chờ trả lời' : 'Đã trả lời'">Trạng thái</span>
+                            <h5 class="mt-2">
+                                <a th:href="@{/vet-qa/question/{id}(id=${q.id})}"
+                                   class="text-decoration-none" th:text="${q.title}">Tiêu đề câu hỏi</a>
+                            </h5>
+                            <p class="text-muted" th:text="${q.content != null and q.content.length() > 200 ? #strings.substring(q.content, 0, 200) + '...' : q.content}">Nội dung...</p>
+                            <small class="text-muted">
+                                <i class="bi bi-clock"></i>
+                                <span th:text="${#temporals.format(q.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày</span>
+                                <span th:if="${q.pet != null}">
+                                    | <i class="bi bi-github"></i> <span th:text="${q.pet.name}">Thú cưng</span>
+                                </span>
+                            </small>
+                        </div>
+                        <div class="text-center ms-3">
+                            <div class="mb-1">
+                                <i class="bi bi-eye text-muted"></i>
+                                <div><small th:text="${q.viewCount ?: 0}">0</small></div>
+                            </div>
+                            <div>
+                                <i class="bi bi-heart text-danger"></i>
+                                <div><small th:text="${q.likeCount ?: 0}">0</small></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center py-5" th:if="${questions.isEmpty()}">
+        <div class="bg-light d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+             style="width: 100px; height: 100px;">
+            <i class="bi bi-chat-left fs-1 text-muted"></i>
+        </div>
+        <h5 class="text-muted">Bạn chưa có câu hỏi công khai nào</h5>
+        <p class="text-muted mb-3">Xem danh sách bác sĩ để được tư vấn qua chat.</p>
+        <a th:href="@{/vet-qa}" class="btn btn-primary">
+            <i class="bi bi-person-badge"></i> Đến trang bác sĩ
+        </a>
+    </div>
+
+    <!-- Pagination -->
+    <nav th:if="${totalPages > 1}" class="d-flex justify-content-center mt-4">
+        <ul class="pagination mb-0">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/vet-qa/my-questions(page=${currentPage - 1})}">
+                    <i class="bi bi-chevron-left"></i> Trước
+                </a>
+            </li>
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link" th:href="@{/vet-qa/my-questions(page=${i})}" th:text="${i + 1}">1</a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                <a class="page-link" th:href="@{/vet-qa/my-questions(page=${currentPage + 1})}">
+                    Sau <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

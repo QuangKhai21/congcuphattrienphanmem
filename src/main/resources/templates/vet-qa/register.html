@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::title}, ~{::#page-content}, ~{::#page-scripts})}">
+<head>
+    <title>Đăng ký làm bác sĩ thú y - Pet Care</title>
+</head>
+<body>
+<div id="page-content" th:fragment="content">
+
+    <div class="vet-hero">
+        <div class="container">
+            <th:block th:if="${editing}">
+                <h1 class="vet-hero-title mb-1"><i class="bi bi-pencil-square"></i> Sửa hồ sơ bác sĩ</h1>
+                <p class="vet-hero-sub mb-0">Cập nhật thông tin hiển thị trên danh sách bác sĩ.</p>
+            </th:block>
+            <th:block th:unless="${editing}">
+                <h1 class="vet-hero-title mb-1"><i class="bi bi-person-plus-fill"></i> Đăng ký trở thành bác sĩ</h1>
+                <p class="vet-hero-sub mb-0">Sau khi gửi, quản trị viên sẽ duyệt yêu cầu. Chỉ khi được duyệt, hồ sơ mới hiển thị trên danh sách bác sĩ công khai.</p>
+            </th:block>
+        </div>
+    </div>
+
+    <div class="container my-4" style="max-width: 640px;">
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <p class="text-muted small mb-4">
+                    Họ tên, email và SĐT lấy từ hồ sơ tài khoản của bạn. Cập nhật trong phần cài đặt nếu cần.
+                </p>
+
+                <form th:action="${editing} ? @{/vet-qa/edit} : @{/vet-qa/register}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Tên phòng khám <span class="text-danger">*</span></label>
+                        <input type="text" name="clinicName" class="form-control" required maxlength="200"
+                               placeholder="VD: Phòng khám Thú y ABC"
+                               th:value="${currentVetProfile?.clinicName}"/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Chuyên ngành <span class="text-danger">*</span></label>
+                        <input type="text" name="specialization" class="form-control" required maxlength="100"
+                               list="specSuggestions" placeholder="VD: Nội khoa thú nhỏ, Phẫu thuật..."
+                               th:value="${currentVetProfile?.specialization}"/>
+                        <datalist id="specSuggestions">
+                            <option th:each="sp : ${specializations}" th:value="${sp}"></option>
+                            <option value="Nội khoa thú nhỏ"></option>
+                            <option value="Phẫu thuật"></option>
+                            <option value="Da liễu thú y"></option>
+                            <option value="Nha khoa"></option>
+                        </datalist>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Tỉnh / Thành phố <span class="text-danger">*</span></label>
+                            <input type="text" name="province" class="form-control" required maxlength="100"
+                                   list="provinceSuggestions" placeholder="VD: TP. Hồ Chí Minh"
+                                   th:value="${currentVetProfile?.province}"/>
+                            <datalist id="provinceSuggestions">
+                                <option th:each="p : ${provinces}" th:value="${p}"></option>
+                                <option value="TP. Hồ Chí Minh"></option>
+                                <option value="Hà Nội"></option>
+                                <option value="Đà Nẵng"></option>
+                                <option value="Cần Thơ"></option>
+                            </datalist>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Quận / Huyện</label>
+                            <input type="text" name="city" class="form-control" maxlength="100" placeholder="Tùy chọn"
+                                   th:value="${currentVetProfile?.city}"/>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Địa chỉ phòng khám</label>
+                        <input type="text" name="clinicAddress" class="form-control" maxlength="200"
+                               placeholder="Số nhà, đường..."
+                               th:value="${currentVetProfile?.clinicAddress}"/>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Số giấy phép hành nghề</label>
+                            <input type="text" name="licenseNumber" class="form-control" maxlength="200"
+                                   th:value="${currentVetProfile?.licenseNumber}"/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Kinh nghiệm (năm)</label>
+                            <input type="number" name="yearsExperience" class="form-control" min="0" max="60" placeholder="0"
+                                   th:value="${currentVetProfile?.yearsExperience}"/>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Giới thiệu ngắn</label>
+                        <textarea name="bio" class="form-control" rows="3" maxlength="2000" placeholder="Tùy chọn"
+                                  th:text="${currentVetProfile?.bio}"></textarea>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check2-circle"></i>
+                            <th:block th:if="${editing}">Lưu thay đổi</th:block>
+                            <th:block th:unless="${editing}">Gửi đăng ký</th:block>
+                        </button>
+                        <a th:href="@{/vet-qa}" class="btn btn-outline-secondary">Quay lại danh sách</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block id="page-scripts" th:fragment="page-scripts"></th:block>
+</body>
+</html>

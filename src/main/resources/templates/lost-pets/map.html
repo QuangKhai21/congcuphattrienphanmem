@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout(~{::title}, ~{::#page-content}, ~{::#page-scripts})}">
+<head>
+    <title>Bản đồ thú cưng thất lạc - Pet Clinic</title>
+</head>
+<body>
+<div id="page-content" th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-map"></i> Bản đồ thú cưng thất lạc</h2>
+        <div>
+            <button type="button" onclick="getLocation()" class="btn btn-primary">
+                <i class="bi bi-crosshair"></i> Vị trí của tôi
+            </button>
+            <a th:href="@{/lost-pets}" class="btn btn-secondary">
+                <i class="bi bi-list"></i> Danh sách
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body p-0">
+                    <div id="map"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <i class="bi bi-exclamation-triangle"></i> Đang tìm kiếm (<span th:text="${reports.size()}">0</span>)
+                </div>
+                <div class="card-body p-0" style="max-height: 550px; overflow-y: auto;">
+                    <div class="list-group list-group-flush">
+                        <a th:each="report : ${reports}"
+                           th:href="@{/lost-pets/report/{id}(id=${report.id})}"
+                           class="list-group-item list-group-item-action"
+                           th:attr="data-lat=${report.lastSeenLat}, data-lng=${report.lastSeenLng}"
+                           onclick="focusMarker(this.dataset.lat, this.dataset.lng); return false;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong th:text="${report.pet.name}">Tên thú cưng</strong>
+                                <small th:text="${#temporals.format(report.lostDate, 'dd/MM')}">01/01</small>
+                            </div>
+                            <small class="text-muted" th:text="${report.lastSeenLocation}">Địa điểm</small>
+                        </a>
+                    </div>
+                    <div class="p-3 text-center text-muted" th:if="${reports.isEmpty()}">
+                        <i class="bi bi-check-circle text-success fs-1"></i>
+                        <p class="mb-0">Không có thú cưng nào thất lạc</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6><i class="bi bi-info-circle"></i> Hướng dẫn</h6>
+                    <ul class="mb-0 small text-muted">
+                        <li>Nhấn "Vị trí của tôi" để xem thú cưng gần bạn</li>
+                        <li>Nhấn vào marker để xem chi tiết</li>
+                        <li>Marker đỏ = đang tìm kiếm</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block id="page-scripts" th:fragment="page-scripts">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <style>
+        #map { height: 600px; width: 100%; }
+        .leaflet-popup-content-wrapper { border-radius: 8px; }
+        .info-window { min-width: 200px; }
+        .info-window h6 { margin: 0 0 5px; color: #333; }
+        .info-window p { margin: 3px 0; font-size: 13px; color: #666; }
+    </style>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+    let map;
+    let markers = [];
+    let userMarker;
+
+    const reports = /*[[${reports}]]*/ [];
+    const pageCenterLat = /*[[${centerLat}]]*/ null;
+    const pageCenterLng = /*[[${centerLng}]]*/ null;
+    const pageRadius = /*[[${radius}]]*/ 10;
+
+    function initMap() {
+        const el = document.getElementById('map');
+        if (!el) return;
+        const defaultCenter = [10.8231, 106.6297];
+        const start = (pageCenterLat != null && pageCenterLng != null)
+            ? [pageCenterLat, pageCenterLng]
+            : defaultCenter;
+        const zoom = (pageCenterLat != null && pageCenterLng != null) ? 13 : 12;
+        map = L.map('map').setView(start, zoom);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+        reports.forEach(report => {
+            if (report.lastSeenLat && report.lastSeenLng) {
+                addMarker(report);
+            }
+        });
+        if (pageCenterLat != null && pageCenterLng != null && typeof pageRadius === 'number') {
+            L.circle([pageCenterLat, pageCenterLng], {
+                color: '#0d6efd', fillOpacity: 0.08, weight: 2, opacity: 0.35,
+                radius: pageRadius * 1000
+            }).addTo(map);
+            const uIcon = L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                iconSize: [25, 41], iconAnchor: [12, 41]
+            });
+            userMarker = L.marker([pageCenterLat, pageCenterLng], { icon: uIcon })
+                .addTo(map).bindPopup('Vị trí đang lọc');
+        }
+        requestAnimationFrame(() => map.invalidateSize());
+        setTimeout(() => map.invalidateSize(), 200);
+    }
+
+    function addMarker(report) {
+        const icon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
+        });
+        const marker = L.marker([report.lastSeenLat, report.lastSeenLng], { icon: icon })
+            .addTo(map)
+            .bindPopup(`
+                <div class="info-window">
+                    <h6>${report.pet.name}</h6>
+                    <p><i class="bi bi-calendar"></i> Mất: ${new Date(report.lostDate).toLocaleDateString('vi-VN')}</p>
+                    <p><i class="bi bi-geo-alt"></i> ${report.lastSeenLocation || 'Không rõ'}</p>
+                    ${report.reward ? '<p class="text-success"><i class="bi bi-gift"></i> ' + report.reward + '</p>' : ''}
+                    <a href="/lost-pets/${report.id}" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                </div>
+            `);
+        markers.push(marker);
+    }
+
+    function getLocation() {
+        if (!navigator.geolocation) {
+            alert('Trình duyệt không hỗ trợ định vị.');
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const r = (typeof pageRadius === 'number' && pageRadius > 0) ? pageRadius : 10;
+                if (map) {
+                    map.setView([lat, lng], 14);
+                    if (userMarker) map.removeLayer(userMarker);
+                    userMarker = L.marker([lat, lng], {
+                        icon: L.icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                            iconSize: [25, 41], iconAnchor: [12, 41]
+                        })
+                    }).addTo(map).bindPopup('Vị trí của bạn');
+                    map.invalidateSize();
+                }
+                window.location.href = '/lost-pets/nearby?lat=' + lat + '&lng=' + lng + '&radius=' + r;
+            },
+            (err) => {
+                let msg = 'Không thể lấy vị trí. ';
+                if (err && err.code === 1) {
+                    msg += 'Trình duyệt đã chặn quyền — nhấn biểu tượng khóa/info cạnh địa chỉ, bật Vị trí cho localhost, rồi tải lại trang.';
+                } else if (err && err.code === 2) {
+                    msg += 'Không xác định được vị trí (tắt GPS hoặc trong nhà).';
+                } else if (err && err.code === 3) {
+                    msg += 'Hết thời gian chờ — thử lại hoặc bật GPS.';
+                } else {
+                    msg += 'Hãy cho phép trang dùng vị trí và bật dịch vụ định vị.';
+                }
+                alert(msg);
+            },
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+        );
+    }
+
+    function focusMarker(lat, lng) {
+        if (!map || !lat || !lng) return;
+        map.setView([parseFloat(lat), parseFloat(lng)], 15);
+    }
+
+    window.addEventListener('DOMContentLoaded', initMap);
+    /*]]>*/
+    </script>
+</th:block>
+</body>
+</html>

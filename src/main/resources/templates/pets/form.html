@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${pet.id != null} ? 'Sửa thú cưng' : 'Thêm thú cưng mới'">Thêm thú cưng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav ('/pets')}"></div>
+
+<div class="container py-4" style="margin-bottom: 4rem;">
+
+    <!-- Alert -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Page Header -->
+    <div class="d-flex align-items-center mb-4">
+        <a th:href="@{/pets}" class="btn btn-outline-secondary me-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <h2 class="mb-0" th:text="${pet.id != null} ? 'Sửa thú cưng' : 'Thêm thú cưng mới'">Thêm thú cưng</h2>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card">
+        <div class="card-body">
+            <!-- Create Form -->
+            <form th:if="${pet.id == null}"
+                  th:action="@{/pets/create}"
+                  th:object="${pet}"
+                  method="post"
+                  enctype="multipart/form-data">
+
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div class="row">
+                    <!-- Tên -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Tên thú cưng *</label>
+                        <input type="text" th:field="*{name}" class="form-control" required
+                               placeholder="VD: Mèo Con, Chó Bun..."/>
+                        <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger small"></div>
+                    </div>
+
+                    <!-- Loài -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Loài *</label>
+                        <select class="form-select" id="categorySelect">
+                            <option value="">-- Chọn loài --</option>
+                            <optgroup label="Loài hệ thống">
+                                <option th:each="c : ${categories}" th:value="${'cat-'+c.id}" th:text="${c.name}">Loài</option>
+                            </optgroup>
+                            <optgroup label="Loài tự tạo" th:if="${userSpecies != null and not #lists.isEmpty(userSpecies)}">
+                                <option th:each="us : ${userSpecies}" th:value="${'us-'+us.id}" th:text="${us.name}">Loài tự tạo</option>
+                            </optgroup>
+                        </select>
+                        <!-- Hidden inputs — điền bởi JS khi chọn loài -->
+                        <input type="hidden" name="categoryId" id="categoryIdHidden" value=""/>
+                        <input type="hidden" name="userSpeciesId" id="userSpeciesIdHidden" value=""/>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Giống: không đặt name trên select (giá trị ub-* gây lỗi Long); hidden do JS submit -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Giống</label>
+                        <select class="form-select" id="breedSelect">
+                            <option value="">-- Chọn giống --</option>
+                        </select>
+                        <input type="hidden" name="breedId" id="breedIdHidden" value=""/>
+                        <input type="hidden" name="userBreedId" id="userBreedIdHidden" value=""/>
+                    </div>
+
+                    <!-- Giới tính -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Giới tính</label>
+                        <select th:field="*{gender}" class="form-select">
+                            <option value="">-- Chọn --</option>
+                            <option value="MALE">&#9794; Đực</option>
+                            <option value="FEMALE">&#9792; Cái</option>
+                            <option value="UNKNOWN">? Chưa rõ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Ngày sinh -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Ngày sinh</label>
+                        <input type="date" th:field="*{dateOfBirth}" class="form-control"/>
+                    </div>
+
+                    <!-- Màu lông -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Màu lông</label>
+                        <input type="text" th:field="*{color}" class="form-control"
+                               placeholder="VD: Nâu, Đen, Trắng..."/>
+                    </div>
+
+                    <!-- Cân nặng -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Cân nặng (kg)</label>
+                        <input type="text" th:field="*{weight}" class="form-control"
+                               placeholder="VD: 5.2"/>
+                    </div>
+                </div>
+
+                <!-- Ghi chú -->
+                <div class="mb-3">
+                    <label class="form-label">Ghi chú</label>
+                    <textarea th:field="*{notes}" class="form-control" rows="3"
+                              placeholder="Thông tin thêm về thú cưng..."></textarea>
+                </div>
+
+                <!-- Avatar upload -->
+                <div class="mb-3">
+                    <label class="form-label">Ảnh đại diện thú cưng</label>
+                    <input type="file" name="avatarFile" class="form-control" accept="image/*"/>
+                    <small class="text-muted">Chọn file ảnh (JPG, PNG, GIF). Dung lượng tối đa 5MB.</small>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Lưu
+                    </button>
+                    <a th:href="@{/pets}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Hủy
+                    </a>
+                </div>
+            </form>
+
+            <!-- Edit Form -->
+            <form th:if="${pet.id != null}"
+                  th:action="@{/pets/{id}/update(id=${pet.id})}"
+                  th:object="${pet}"
+                  method="post"
+                  enctype="multipart/form-data">
+
+                <input type="hidden" th:field="*{id}"/>
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div class="row">
+                    <!-- Tên -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Tên thú cưng *</label>
+                        <input type="text" th:field="*{name}" class="form-control" required/>
+                        <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger small"></div>
+                    </div>
+
+                    <!-- Loài -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Loài *</label>
+                        <select class="form-select" id="categorySelect">
+                            <option value="">-- Chọn loài --</option>
+                            <optgroup label="Loài hệ thống">
+                                <option th:each="c : ${categories}" th:value="${'cat-'+c.id}" th:text="${c.name}"
+                                        th:selected="${pet.category != null and pet.category.id == c.id}">Loài</option>
+                            </optgroup>
+                            <optgroup label="Loài tự tạo" th:if="${userSpecies != null and not #lists.isEmpty(userSpecies)}">
+                                <option th:each="us : ${userSpecies}" th:value="${'us-'+us.id}" th:text="${us.name}"
+                                        th:selected="${pet.userSpecies != null and pet.userSpecies.id == us.id}">Loài tự tạo</option>
+                            </optgroup>
+                        </select>
+                        <input type="hidden" name="categoryId" id="categoryIdHidden"
+                               th:value="${pet.category != null ? pet.category.id : ''}"/>
+                        <input type="hidden" name="userSpeciesId" id="userSpeciesIdHidden"
+                               th:value="${pet.userSpecies != null ? pet.userSpecies.id : ''}"/>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Giống -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Giống</label>
+                        <select class="form-select" id="breedSelect">
+                            <option value="">-- Chọn giống --</option>
+                            <optgroup label="Giống hệ thống">
+                                <option th:each="b : ${breeds}" th:value="${b.id}" th:text="${b.name}"
+                                        th:attr="data-category=${b.category.id}"
+                                        th:selected="${pet.breed != null and pet.breed.id == b.id}">Giống</option>
+                            </optgroup>
+                        </select>
+                        <input type="hidden" name="breedId" id="breedIdHidden"
+                               th:value="${pet.breed != null ? pet.breed.id : ''}"/>
+                        <input type="hidden" name="userBreedId" id="userBreedIdHidden"
+                               th:value="${pet.userBreed != null ? pet.userBreed.id : ''}"/>
+                    </div>
+
+                    <!-- Giới tính -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Giới tính</label>
+                        <select th:field="*{gender}" class="form-select">
+                            <option value="">-- Chọn --</option>
+                            <option value="MALE">&#9794; Đực</option>
+                            <option value="FEMALE">&#9792; Cái</option>
+                            <option value="UNKNOWN">? Chưa rõ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Ngày sinh -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Ngày sinh</label>
+                        <input type="date" th:field="*{dateOfBirth}" class="form-control"/>
+                    </div>
+
+                    <!-- Màu lông -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Màu lông</label>
+                        <input type="text" th:field="*{color}" class="form-control"/>
+                    </div>
+
+                    <!-- Cân nặng -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Cân nặng (kg)</label>
+                        <input type="text" th:field="*{weight}" class="form-control"/>
+                    </div>
+                </div>
+
+                <!-- Trạng thái -->
+                <div class="mb-3">
+                    <label class="form-label">Trạng thái</label>
+                    <select th:field="*{status}" class="form-select">
+                        <option value="ACTIVE">Đang nuôi</option>
+                        <option value="PASSED">Đã mất</option>
+                        <option value="TRANSFERRED">Đã chuyển nhượng</option>
+                    </select>
+                </div>
+
+                <!-- Ghi chú -->
+                <div class="mb-3">
+                    <label class="form-label">Ghi chú</label>
+                    <textarea th:field="*{notes}" class="form-control" rows="3"></textarea>
+                </div>
+
+                <!-- Avatar upload / preview -->
+                <div class="mb-3">
+                    <label class="form-label">Ảnh đại diện thú cưng</label>
+                    <div th:if="${pet.avatarUrl != null and not #strings.isEmpty(pet.avatarUrl)}" class="mb-2">
+                        <img th:src="@{${pet.avatarUrl}}" alt="Avatar" class="rounded" style="max-width:120px; max-height:120px; object-fit:cover;"/>
+                        <span class="small text-muted ms-2">Ảnh hiện tại — chọn ảnh mới để thay thế</span>
+                    </div>
+                    <input type="file" name="avatarFile" class="form-control" accept="image/*"/>
+                    <small class="text-muted">Chọn file ảnh (JPG, PNG, GIF). Dung lượng tối đa 5MB.</small>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Lưu
+                    </button>
+                    <a th:href="@{/pets}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Hủy
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+<script>
+// Xử lý dropdown Loài + Giống (hệ thống + tự tạo)
+document.addEventListener('DOMContentLoaded', function() {
+    var categorySelect     = document.getElementById('categorySelect');
+    var breedSelect        = document.getElementById('breedSelect');
+    var categoryIdHidden   = document.getElementById('categoryIdHidden');
+    var userSpeciesIdHidden = document.getElementById('userSpeciesIdHidden');
+    var userBreedIdHidden  = document.getElementById('userBreedIdHidden');
+    var breedIdHidden      = document.getElementById('breedIdHidden');
+
+    if (!categorySelect) return;
+
+    // Khi submit form, điền hidden inputs từ dropdown hiển thị
+    var form = categorySelect.closest('form');
+    if (form) {
+        form.addEventListener('submit', function() {
+            var val = categorySelect.value; // "cat-1" hoặc "us-1" hoặc ""
+            if (val.startsWith('cat-')) {
+                if (categoryIdHidden)     categoryIdHidden.value     = val.slice(4);
+                if (userSpeciesIdHidden)  userSpeciesIdHidden.value  = '';
+                if (breedIdHidden && breedSelect) {
+                    breedIdHidden.value = breedSelect.value.startsWith('ub-') ? '' : breedSelect.value;
+                }
+                if (userBreedIdHidden) userBreedIdHidden.value = breedSelect && breedSelect.value.startsWith('ub-') ? breedSelect.value.slice(3) : '';
+            } else if (val.startsWith('us-')) {
+                if (categoryIdHidden)     categoryIdHidden.value     = '';
+                if (userSpeciesIdHidden)  userSpeciesIdHidden.value  = val.slice(3);
+                if (breedIdHidden)        breedIdHidden.value       = '';
+                if (userBreedIdHidden && breedSelect) userBreedIdHidden.value = breedSelect.value.startsWith('ub-') ? breedSelect.value.slice(3) : '';
+            } else {
+                if (categoryIdHidden)     categoryIdHidden.value     = '';
+                if (userSpeciesIdHidden)  userSpeciesIdHidden.value  = '';
+            }
+        });
+    }
+
+    // Hàm load giống theo loài
+    function loadBreeds(prefix, id, selectedBreedId) {
+        if (!breedSelect) return;
+
+        var apiUrl;
+        if (prefix === 'cat') {
+            apiUrl = '/pets/api/breeds?categoryId=' + id;
+        } else if (prefix === 'us') {
+            apiUrl = '/pets/api/user-breeds?speciesId=' + id;
+        } else {
+            breedSelect.innerHTML = '<option value="">-- Chọn giống --</option>';
+            return;
+        }
+
+        fetch(apiUrl, { credentials: 'same-origin', cache: 'no-store' })
+        .then(function(r) { return r.json(); })
+        .then(function(breeds) {
+            var currentSelected = breedSelect.value; // giữ lại selection hiện tại nếu không có selectedBreedId
+            breedSelect.innerHTML = '<option value="">-- Chọn giống --</option>';
+            breeds.forEach(function(b) {
+                var opt = document.createElement('option');
+                opt.value = (prefix === 'us' ? 'ub-' : '') + b.id;
+                opt.textContent = b.name;
+                var targetId = selectedBreedId || currentSelected;
+                if (targetId && opt.value === targetId) opt.selected = true;
+                breedSelect.appendChild(opt);
+            });
+        })
+        .catch(function() {
+            breedSelect.innerHTML = '<option value="">-- Chọn giống --</option>';
+        });
+    }
+
+    // Khi loài thay đổi
+    categorySelect.addEventListener('change', function() {
+        var val = this.value;
+        if (val.startsWith('cat-')) {
+            loadBreeds('cat', val.slice(4), null);
+        } else if (val.startsWith('us-')) {
+            loadBreeds('us', val.slice(3), null);
+        } else if (breedSelect) {
+            breedSelect.innerHTML = '<option value="">-- Chọn giống --</option>';
+        }
+    });
+
+    // Form edit: auto-load breeds nếu pet đã có loài được chọn sẵn
+    var selectedVal = categorySelect.value;
+    if (selectedVal) {
+        if (selectedVal.startsWith('cat-')) {
+            var initCatId = selectedVal.slice(4);
+            if (breedIdHidden && breedIdHidden.value) {
+                loadBreeds('cat', initCatId, breedIdHidden.value);
+            } else {
+                loadBreeds('cat', initCatId, null);
+            }
+        } else if (selectedVal.startsWith('us-')) {
+            var initUsId = selectedVal.slice(3);
+            if (userBreedIdHidden && userBreedIdHidden.value) {
+                loadBreeds('us', initUsId, 'ub-' + userBreedIdHidden.value);
+            } else {
+                loadBreeds('us', initUsId, null);
+            }
+        }
+    }
+});
+</script>
+</body>
+</html>

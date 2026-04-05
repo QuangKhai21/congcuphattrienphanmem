@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<th:block th:fragment="nav (currentUri)">
+<!-- ${currentUri} is passed explicitly from each page (e.g. '/login', '/pets'); fallback for pages using layout.html where #httpServletRequest is available -->
+<th:block th:with="uri=${currentUri != null ? currentUri : #httpServletRequest?.requestURI}">
+<header class="site-header sticky-top">
+    <div class="site-topbar">
+        <div class="container">
+            <!-- Hàng logo + ô tìm kiếm + tài khoản: desktop một dòng căn giữa dọc; mobile logo và icon cùng hàng, tìm kiếm xuống dưới -->
+            <div class="row align-items-center g-2 g-lg-3 py-2 flex-lg-nowrap">
+                <div class="col-auto order-1 order-lg-1 flex-shrink-0">
+                    <a class="site-logo text-decoration-none" th:href="@{/}">
+                        <span class="site-logo-a">P</span><span class="site-logo-rest">et Care</span>
+                    </a>
+                </div>
+                <div class="col-12 col-lg order-3 order-lg-2 site-topbar-search-col">
+                    <form class="site-search mb-0" th:action="@{/products}" method="get" role="search">
+                        <div class="input-group site-search-input-group">
+                            <input type="search" name="keyword" class="form-control" placeholder="Tìm sản phẩm bạn mong muốn" aria-label="Từ khóa"/>
+                            <button type="submit" class="btn site-search-btn" aria-label="Tìm kiếm"><i class="bi bi-search"></i></button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-auto ms-auto ms-lg-0 order-2 order-lg-3 flex-shrink-0 site-topbar-actions">
+                    <div class="d-flex align-items-center gap-2">
+                    <ul class="navbar-nav flex-row align-items-center gap-1 mb-0">
+                        <li class="nav-item dropdown" sec:authorize="isAuthenticated()" id="notificationDropdown">
+                            <a class="nav-link position-relative px-2" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-bell-fill fs-5"></i>
+                                <span th:if="${notificationCount != null and notificationCount > 0}"
+                                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                      style="font-size: 0.6rem;">
+                                    <span th:text="${notificationCount}">0</span>
+                                    <span class="visually-hidden">thông báo mới</span>
+                                </span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end notification-menu p-0" style="width: 320px;">
+                                <div class="dropdown-header d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                                    <span><i class="bi bi-bell"></i> Thông báo</span>
+                                    <a th:if="${notificationCount != null and notificationCount > 0}" th:href="@{/notifications/mark-all-read}" class="small text-decoration-none">Đánh dấu đã đọc</a>
+                                </div>
+                                <div id="notification-items-container" class="notification-items-scroll">
+                                    <th:block th:if="${notifications != null && #lists.size(notifications) > 0}">
+                                        <a th:each="notif : ${notifications}" class="dropdown-item notification-item" th:href="@{${notif.link}}">
+                                            <div class="d-flex align-items-start">
+                                                <div class="me-2">
+                                                    <i th:class="${notif.iconClass}"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="small fw-medium" th:text="${notif.title}"></div>
+                                                    <div class="small text-muted" th:text="${notif.message}"></div>
+                                                    <div class="small text-muted" th:text="${notif.timeAgo}"></div>
+                                                </div>
+                                                <div th:if="${!notif.read}" class="badge bg-danger rounded-circle" style="width: 8px; height: 8px;"></div>
+                                            </div>
+                                        </a>
+                                    </th:block>
+                                    <div th:if="${notifications == null || #lists.size(notifications) == 0}" class="px-3 py-4 text-center text-muted empty-notification-placeholder">
+                                        <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>
+                                        <small>Không có thông báo mới</small>
+                                    </div>
+                                </div>
+                                <div class="border-top text-center py-2">
+                                    <a class="small" th:href="@{/notifications}">Xem tất cả thông báo</a>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="vr d-none d-sm-block text-white"></div>
+                    <ul class="navbar-nav flex-row align-items-center gap-1 mb-0">
+                        <li class="nav-item" sec:authorize="!isAuthenticated()">
+                            <a class="nav-link d-flex align-items-center gap-1 px-2" th:href="@{/login}">
+                                <i class="bi bi-person"></i><span class="d-none d-md-inline">Đăng nhập / Đăng ký</span>
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                            <a class="nav-link dropdown-toggle px-2" href="#" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i> <span class="d-none d-md-inline" sec:authentication="name">User</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li class="px-3 py-2 text-center border-bottom">
+                                    <small class="text-muted">Đăng nhập với</small><br/>
+                                    <strong sec:authentication="name">User</strong>
+                                </li>
+                                <li><a class="dropdown-item" th:href="@{/profile}"><i class="bi bi-person-circle"></i> Thông tin cá nhân</a></li>
+                                <li><a class="dropdown-item" th:href="@{/dashboard}"><i class="bi bi-grid"></i> Dashboard</a></li>
+                                <li><a class="dropdown-item" th:href="@{/pets}"><i class="bi bi-heart"></i> Thú cưng của tôi</a></li>
+                                <li><hr class="dropdown-divider"/></li>
+                                <li>
+                                    <form th:action="@{/logout}" method="post">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Đăng xuất</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Inject current user ID for chat JS -->
+        <th:block sec:authorize="isAuthenticated()">
+            <input type="hidden" id="current-user-id" th:value="${#authentication.principal.user.id}"/>
+        </th:block>
+    </div>
+    <nav class="site-subnav navbar navbar-expand-lg">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#siteSubnav" aria-controls="siteSubnav" aria-expanded="false" aria-label="Menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse align-items-lg-center justify-content-lg-between flex-lg-row flex-column gap-lg-2" id="siteSubnav">
+                <ul class="navbar-nav mb-2 mb-lg-0 flex-wrap justify-content-lg-center flex-lg-grow-1">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/}"
+                           th:classappend="${uri == '/'} ? 'active' : ''">Trang chủ</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/pets}"
+                           th:classappend="${uri != null && uri.startsWith('/pets')} ? 'active' : ''"><i class="bi bi-heart d-lg-none me-1"></i> Thú cưng</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/my-species}"
+                           th:classappend="${uri == '/my-species'} ? 'active' : ''"><i class="bi bi-flower1 d-lg-none me-1"></i> Loài & Giống</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/appointments}"
+                           th:classappend="${uri != null && uri.startsWith('/appointments')} ? 'active' : ''"><i class="bi bi-calendar-event d-lg-none me-1"></i> Lịch hẹn</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/lost-pets}"
+                           th:classappend="${uri != null && uri.startsWith('/lost-pets')} ? 'active' : ''"><i class="bi bi-search-heart d-lg-none me-1"></i> Tìm thú lạc</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/services}"
+                           th:classappend="${uri != null && uri.startsWith('/services')} ? 'active' : ''"><i class="bi bi-geo-alt d-lg-none me-1"></i> Dịch vụ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/vet-qa}"
+                           th:classappend="${uri != null && uri.startsWith('/vet-qa')} ? 'active' : ''"><i class="bi bi-award d-lg-none me-1"></i> Bác sĩ</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/health/dashboard}"
+                           th:classappend="${uri != null && uri.startsWith('/health')} ? 'active' : ''"><i class="bi bi-heart-pulse d-lg-none me-1"></i> Sức khỏe</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/dashboard}"
+                           th:classappend="${uri != null && uri.startsWith('/dashboard')} ? 'active' : ''"><i class="bi bi-graph-up d-lg-none me-1"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" th:href="@{/admin}"
+                           th:classappend="${uri != null && uri.startsWith('/admin')} ? 'active' : ''"><i class="bi bi-shield-lock d-lg-none me-1"></i> Quản trị</a>
+                    </li>
+                    <li class="nav-item d-lg-none" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" th:href="@{/register}">Đăng ký</a>
+                    </li>
+                </ul>
+                <div class="site-hotline d-none d-lg-flex align-items-center flex-shrink-0 ms-lg-2">
+                    <i class="bi bi-telephone-fill"></i>
+                    <span>Hotline: <strong>1900 6750</strong></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+<div th:replace="~{fragments/nekomimi-chat :: nekomimi-chat}"></div>
+<!-- Tránh điều hướng trùng URL — xem same-page-nav-guard.js -->
+<script th:src="@{/js/same-page-nav-guard.js}"></script>
+<script th:inline="javascript" sec:authorize="isAuthenticated()">
+(function () {
+    function escapeHtml(s) {
+        if (!s) return '';
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+    function refreshNotifications() {
+        fetch(/*[[@{/notifications/api/header-data}]]*/ '/notifications/api/header-data', {
+            headers: { 'Accept': 'application/json' },
+            credentials: 'same-origin'
+        }).then(function (r) {
+            if (!r.ok) return Promise.reject(new Error('header-data ' + r.status));
+            return r.json();
+        }).then(function (data) {
+            var toggle = document.querySelector('#notificationDropdown > a.nav-link');
+            if (!toggle) return;
+            var badge = toggle.querySelector('.badge.rounded-pill');
+            var cnt = data.count || 0;
+            if (cnt > 0) {
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger';
+                    badge.style.fontSize = '0.6rem';
+                    badge.innerHTML = '<span class="notif-count">0</span><span class="visually-hidden">thông báo mới</span>';
+                    toggle.appendChild(badge);
+                }
+                var sp = badge.querySelector('.notif-count');
+                if (sp) sp.textContent = cnt;
+            } else if (badge) {
+                badge.remove();
+            }
+            var root = document.getElementById('notification-items-container');
+            if (!root || !data.notifications) return;
+            if (data.notifications.length === 0) {
+                root.innerHTML = '<div class="px-3 py-4 text-center text-muted empty-notification-placeholder"><i class="bi bi-bell-slash fs-4 d-block mb-2"></i><small>Không có thông báo mới</small></div>';
+                return;
+            }
+            root.innerHTML = data.notifications.map(function (n) {
+                var dot = n.read ? '' : '<div class="badge bg-danger rounded-circle" style="width:8px;height:8px;"></div>';
+                return '<a class="dropdown-item notification-item" href="' + escapeHtml(n.link || '#') + '">' +
+                    '<div class="d-flex align-items-start"><div class="me-2"><i class="' + escapeHtml(n.iconClass || 'bi bi-bell') + '"></i></div>' +
+                    '<div class="flex-grow-1"><div class="small fw-medium">' + escapeHtml(n.title) + '</div>' +
+                    '<div class="small text-muted">' + escapeHtml(n.message) + '</div>' +
+                    '<div class="small text-muted">' + escapeHtml(n.timeAgo) + '</div></div>' + dot + '</div></a>';
+            }).join('');
+        }).catch(function () { /* ignore */ });
+    }
+    function markAllReadThenRefresh() {
+        var csrfInput = document.querySelector('input[name="_csrf"]');
+        var url = /*[[@{/notifications/api/mark-all-read}]]*/ '/notifications/api/mark-all-read';
+        if (!csrfInput) {
+            refreshNotifications();
+            return;
+        }
+        fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: '_csrf=' + encodeURIComponent(csrfInput.value)
+        }).then(function () { refreshNotifications(); }).catch(function () { refreshNotifications(); });
+    }
+    setInterval(refreshNotifications, 15000);
+    document.addEventListener('DOMContentLoaded', function () {
+        refreshNotifications();
+        var el = document.getElementById('notificationDropdown');
+        if (el) {
+            el.addEventListener('shown.bs.dropdown', markAllReadThenRefresh);
+        }
+    });
+})();
+</script>
+<!-- Chỉ khi đã đăng nhập: principal là UserDetailsImpl. AnonymousUser có principal kiểu String → không được gọi .user -->
+<th:block sec:authorize="isAuthenticated()">
+    <input type="hidden" name="userAvatarUrl" th:value="${avatarUrls.normalize(#authentication.principal.user.avatarUrl)}"/>
+    <input type="hidden" name="userId" th:value="${#authentication.principal.user.id}"/>
+    <input type="hidden" name="userFullName" th:value="${#authentication.principal.user.fullName}"/>
+</th:block>
+</th:block>
+</th:block>
+</html>

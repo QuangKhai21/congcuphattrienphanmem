@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout(~{::title}, ~{::#page-content}, ~{::#page-scripts})}">
+<head>
+    <title>Chi tiết báo cáo - Pet Clinic</title>
+</head>
+<body>
+<div id="page-content" th:fragment="content">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/lost-pets}">Tìm thú cưng</a></li>
+            <li class="breadcrumb-item active" th:text="${report.pet.name}">Chi tiết</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> THÚ CƯNG THẤT LẠC</h4>
+                    <span th:classappend="(${report.status?.name() == 'ACTIVE'}) ? 'badge bg-light text-danger' : 'badge bg-success'"
+                          th:text="(${report.status?.name() == 'ACTIVE'}) ? 'ĐANG TÌM KIẾM' : 'ĐÃ TÌM THẤY'">
+                        ĐANG TÌM KIẾM
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <i class="bi bi-github" style="font-size: 80px; color: #ccc;"></i>
+                                <h5 class="mt-2" th:text="${report.pet.name}">Tên thú cưng</h5>
+                                <p class="text-muted mb-0" th:text="${report.pet.category?.name}">Loại</p>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Ngày thất lạc:</strong></td>
+                                    <td th:text="${#temporals.format(report.lostDate, 'dd/MM/yyyy HH:mm')}">01/01/2024</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Địa điểm:</strong></td>
+                                    <td th:text="${report.lastSeenLocation ?: 'Không rõ'}">Địa điểm</td>
+                                </tr>
+                                <tr th:if="${report.description}">
+                                    <td><strong>Mô tả:</strong></td>
+                                    <td th:text="${report.description}">Mô tả</td>
+                                </tr>
+                                <tr th:if="${report.reward}">
+                                    <td><strong>Phần thưởng:</strong></td>
+                                    <td class="text-success fw-bold" th:text="${report.reward}">500.000đ</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Người báo:</strong></td>
+                                    <td th:text="${report.reporter.fullName}">Tên người báo</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Ngày đăng:</strong></td>
+                                    <td th:text="${#temporals.format(report.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="reportMap" class="mt-3" style="height: 300px;"></div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex gap-2" th:if="${report.status?.name() == 'ACTIVE'}">
+                        <a th:href="@{'tel:' + ${report.contactPhone}}" class="btn btn-success" th:if="${report.contactPhone}">
+                            <i class="bi bi-telephone"></i> Gọi ngay
+                        </a>
+                        <form th:action="@{/lost-pets/report/{id}/found(id=${report.id})}" method="post" th:if="${#authentication.name == report.reporter.username}">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Đã tìm thấy!
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-share"></i> Chia sẻ
+                </div>
+                <div class="card-body">
+                    <p>Giúp lan truyền thông tin để sớm tìm lại thú cưng!</p>
+                    <button onclick="shareReport()" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="bi bi-share"></i> Chia sẻ ngay
+                    </button>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <i class="bi bi-lightbulb"></i> Mẹo tìm thú cưng
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0 small">
+                        <li>Đăng lên các nhóm Facebook địa phương</li>
+                        <li>Dán áp phích quanh khu vực thất lạc</li>
+                        <li>Gọi tên thú cưng nhiều lần</li>
+                        <li>Kiểm tra các nơi trú ẩn gần đó</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block id="page-scripts" th:fragment="page-scripts">
+    <th:block th:if="${report.lastSeenLat != null and report.lastSeenLng != null}">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    </th:block>
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+    function shareReport() {
+        const petName = /*[[${report.pet.name}]]*/ '';
+        const location = /*[[${report.lastSeenLocation}]]*/ '';
+        if (navigator.share) {
+            navigator.share({
+                title: 'Tìm thú cưng: ' + petName,
+                text: 'Giúp tìm ' + petName + ' bị thất lạc tại ' + location,
+                url: window.location.href
+            });
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            alert('Đã copy link!');
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+        const el = document.getElementById('reportMap');
+        if (!el) return;
+        const lat = /*[[${report.lastSeenLat}]]*/ null;
+        const lng = /*[[${report.lastSeenLng}]]*/ null;
+        const petName = /*[[${report.pet.name}]]*/ '';
+        if (lat && lng) {
+            const map = L.map('reportMap').setView([lat, lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+            const icon = L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                iconSize: [25, 41], iconAnchor: [12, 41]
+            });
+            L.marker([lat, lng], { icon: icon }).addTo(map).bindPopup(petName);
+            requestAnimationFrame(() => map.invalidateSize());
+            setTimeout(() => map.invalidateSize(), 200);
+        }
+    });
+    /*]]>*/
+    </script>
+</th:block>
+</body>
+</html>

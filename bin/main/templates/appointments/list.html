@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Lịch hẹn - Pet Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav}"></div>
+
+<div class="container py-4">
+    <div th:if="${success}" class="alert alert-success alert-dismissible">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-calendar-check"></i> Lịch hẹn</h2>
+        <a th:href="@{/appointments/new}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Đặt lịch mới</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>Thú cưng</th>
+                <th>Ngày giờ</th>
+                <th>Loại</th>
+                <th>Lý do</th>
+                <th>Trạng thái</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="a : ${appointments}">
+                <td th:text="${a.pet.name}">Tên thú cưng</td>
+                <td th:text="${#temporals.format(a.appointmentDate, 'dd/MM/yyyy HH:mm')}">Ngày</td>
+                <td>
+                    <span th:switch="${a.type?.name()}">
+                        <span th:case="'CHECKUP'">Khám tổng quát</span>
+                        <span th:case="'VACCINATION'">Tiêm phòng</span>
+                        <span th:case="'GROOMING'">Cắt tỉa lông</span>
+                        <span th:case="'SURGERY'">Phẫu thuật</span>
+                        <span th:case="'DENTAL'">Chăm sóc răng</span>
+                        <span th:case="*" th:text="${a.type}">Loại</span>
+                    </span>
+                </td>
+                <td th:text="${a.reason}">Lý do</td>
+                <td>
+                    <span class="badge bg-primary" th:if="${a.status.name() == 'SCHEDULED'}">Đã đặt</span>
+                    <span class="badge bg-success" th:if="${a.status.name() == 'COMPLETED'}">Hoàn thành</span>
+                    <span class="badge bg-warning" th:if="${a.status.name() == 'CONFIRMED'}">Đã xác nhận</span>
+                    <span class="badge bg-info" th:if="${a.status.name() == 'IN_PROGRESS'}">Đang thực hiện</span>
+                    <span class="badge bg-secondary" th:if="${a.status.name() == 'CANCELLED' or a.status.name() == 'NO_SHOW'}">Hủy</span>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(appointments)}">
+                <td colspan="5" class="text-center text-muted py-4">Chưa có lịch hẹn nào</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <nav th:if="${totalPages > 1}">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/appointments(page=${currentPage - 1})}">Trước</a>
+            </li>
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link" th:href="@{/appointments(page=${i})}" th:text="${i + 1}">1</a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                <a class="page-link" th:href="@{/appointments(page=${currentPage + 1})}">Sau</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<footer class="bg-light text-center py-3 mt-5">
+    <p class="mb-0 text-muted">&copy; 2025 Pet Management System</p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

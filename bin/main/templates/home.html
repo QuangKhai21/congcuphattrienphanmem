@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Pet Management - Trang chủ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="/"><i class="bi bi-heart-pulse-fill"></i> Pet Management</a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link text-white" th:href="@{/products}">Sản phẩm</a>
+            <a class="nav-link text-white" th:href="@{/login}">Đăng nhập</a>
+            <a class="nav-link text-white" th:href="@{/register}">Đăng ký</a>
+        </div>
+    </div>
+</nav>
+
+<section class="hero py-5 bg-light">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold text-primary">Chào mừng đến Pet Management</h1>
+        <p class="lead">Hệ thống quản lý thú cưng quy mô lớn - Quản lý thú cưng, đặt lịch, mua sắm một cách chuyên nghiệp</p>
+        <a th:href="@{/register}" class="btn btn-primary btn-lg me-2">Bắt đầu ngay</a>
+        <a th:href="@{/products}" class="btn btn-outline-primary btn-lg">Xem sản phẩm</a>
+    </div>
+</section>
+
+<section class="services py-5">
+    <div class="container">
+        <h2 class="text-center mb-4">Dịch vụ của chúng tôi</h2>
+        <div class="row g-4">
+            <div class="col-md-4" th:each="sv : ${services}">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-heart-pulse display-4 text-primary"></i>
+                        <h5 class="card-title mt-2" th:text="${sv.name}">Dịch vụ</h5>
+                        <p class="card-text text-muted" th:text="${sv.description}">Mô tả</p>
+                        <p class="text-primary fw-bold" th:text="${#numbers.formatDecimal(sv.price, 0, 'COMMA', 0, 'POINT') + ' đ'}">Giá</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="products py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-4">Sản phẩm nổi bật</h2>
+        <div class="row g-4">
+            <div class="col-md-4 col-lg-2" th:each="p : ${products}">
+                <div class="card h-100 shadow-sm product-card">
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                        <i class="bi bi-box-seam display-4 text-muted" th:if="${p.imageUrl == null}"></i>
+                        <img th:if="${p.imageUrl != null}" th:src="${p.imageUrl}" alt="Product" class="img-fluid" style="max-height: 150px; object-fit: contain;"/>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title text-truncate" th:text="${p.name}">Tên SP</h6>
+                        <p class="text-primary fw-bold mb-0">
+                            <span th:text="${p.salePrice != null ? #numbers.formatDecimal(p.salePrice, 0, 'COMMA', 0, 'POINT') : #numbers.formatDecimal(p.price, 0, 'COMMA', 0, 'POINT')}"></span> đ
+                        </p>
+                        <a th:href="@{/products/{id}(id=${p.id})}" class="stretched-link"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <a th:href="@{/products}" class="btn btn-primary">Xem tất cả sản phẩm</a>
+        </div>
+    </div>
+</section>
+
+<footer class="bg-dark text-white text-center py-4">
+    <p class="mb-0">&copy; 2025 Pet Management System</p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

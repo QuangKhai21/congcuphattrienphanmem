@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Báo cáo - Pet Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav ('/reports')}"></div>
+
+<div class="container py-4" style="margin-bottom: 4rem;">
+
+    <h2 class="mb-4"><i class="bi bi-file-earmark-bar-graph text-primary"></i> Báo cáo & Xuất dữ liệu</h2>
+
+    <div class="row g-4">
+        <!-- Pet Report -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-heart fs-1 text-primary"></i>
+                    </div>
+                    <h5>Danh sách thú cưng</h5>
+                    <p class="text-muted small">Xuất danh sách tất cả thú cưng kèm thông tin chi tiết</p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a th:href="@{/reports/pets}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye"></i> Xem
+                        </a>
+                        <a th:href="@{/reports/pets/excel}" class="btn btn-success btn-sm">
+                            <i class="bi bi-file-earmark-excel"></i> Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical Records Report -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-danger bg-opacity-10 d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-file-earmark-medical fs-1 text-danger"></i>
+                    </div>
+                    <h5>Hồ sơ bệnh án</h5>
+                    <p class="text-muted small">Xuất lịch sử khám bệnh của thú cưng</p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a th:href="@{/reports/pets}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye"></i> Xem
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointment Report -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-warning bg-opacity-10 d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-calendar-event fs-1 text-warning"></i>
+                    </div>
+                    <h5>Lịch hẹn</h5>
+                    <p class="text-muted small">Xuất danh sách lịch hẹn theo ngày</p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a th:href="@{/reports/appointments}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye"></i> Xem
+                        </a>
+                        <a th:href="@{/reports/appointments/excel}" class="btn btn-success btn-sm">
+                            <i class="bi bi-file-earmark-excel"></i> Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Report (Admin only) -->
+        <div class="col-md-6 col-lg-4" th:if="${isAdminOrManager}">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-info bg-opacity-10 d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-graph-up fs-1 text-info"></i>
+                    </div>
+                    <h5>Thống kê tổng quan</h5>
+                    <p class="text-muted small">Báo cáo thống kê toàn hệ thống</p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a th:href="@{/reports/statistics(format='html')}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye"></i> Xem
+                        </a>
+                        <a th:href="@{/reports/statistics(format='pdf')}" class="btn btn-danger btn-sm">
+                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

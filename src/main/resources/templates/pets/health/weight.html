@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="|Theo dõi cân nặng - ${pet.name}|">Theo dõi cân nặng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        .weight-trend {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .trend-up { color: #dc3545; }
+        .trend-down { color: #198754; }
+        .trend-stable { color: #6c757d; }
+    </style>
+</head>
+<body class="theme-body">
+<div th:replace="~{fragments/nav :: nav ('/pets')}"></div>
+
+<main class="container py-4 site-main" style="margin-bottom: 4rem;">
+
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div class="d-flex align-items-center min-w-0">
+            <a th:href="@{/pets}" class="btn btn-outline-secondary me-3 flex-shrink-0">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h2 class="mb-0 text-truncate" th:text="|Theo dõi cân nặng — ${pet.name}|">Theo dõi cân nặng</h2>
+        </div>
+        <a th:href="@{/pets/{id}/weight/new(id=${pet.id})}" class="btn btn-primary flex-shrink-0">
+            <i class="bi bi-plus-lg"></i> Thêm bản ghi
+        </a>
+    </div>
+
+    <!-- Pet summary — cùng fragment với hồ sơ bệnh án / overview -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body py-3">
+            <div class="row align-items-center g-3">
+                <th:block th:replace="~{fragments/pet-health-subpage :: asideAndInfo(${pet}, true)}"/>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Weight Summary -->
+    <div th:if="${not #lists.isEmpty(records)}" class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-speedometer2 fs-1 mb-2 d-block opacity-50"></i>
+                    <h3 class="mb-0" th:text="${latestWeight?.weight ?: '-'}"></h3>
+                    <small>Cân nặng hiện tại (kg)</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar3 fs-1 mb-2 d-block text-primary opacity-50"></i>
+                    <h5 class="mb-0" th:text="${#temporals.format(latestWeight?.recordDate, 'dd/MM/yyyy')} ?: '-'"></h5>
+                    <small>Cập nhật lần cuối</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-list-check fs-1 mb-2 d-block text-secondary opacity-50"></i>
+                    <h5 class="mb-0" th:text="${#lists.size(records)}"></h5>
+                    <small>Tổng bản ghi</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div th:if="${not #lists.isEmpty(records)}" class="card mb-4 shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-graph-up text-primary"></i> Biểu đồ cân nặng</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="weightChart" height="100"></canvas>
+        </div>
+    </div>
+
+    <!-- Weight Records Table -->
+    <div th:if="${not #lists.isEmpty(records)}" class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Ngày ghi nhận</th>
+                        <th>Cân nặng</th>
+                        <th>Thay đổi</th>
+                        <th>Ghi chú</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="record, iter : ${records}">
+                        <td th:text="${#temporals.format(record.recordDate, 'dd/MM/yyyy')}"></td>
+                        <td>
+                            <span class="fw-bold" th:text="${record.weight}"></span> kg
+                        </td>
+                        <td>
+                            <span th:if="${iter.index > 0}">
+                                <th:block th:with="prevWeight=${records[iter.index - 1].weight}, currWeight=${record.weight},
+                                               prevVal=${@dateUtil.parseDouble(prevWeight)},
+                                               currVal=${@dateUtil.parseDouble(currWeight)},
+                                               change=${currVal - prevVal}">
+                                    <span class="weight-trend">
+                                        <i th:if="${change > 0}" class="bi bi-caret-up-fill trend-up"></i>
+                                        <i th:if="${change < 0}" class="bi bi-caret-down-fill trend-down"></i>
+                                        <i th:if="${change == 0}" class="bi bi-dash trend-stable"></i>
+                                        <span th:class="${change > 0} ? 'trend-up' : (${change < 0} ? 'trend-down' : 'trend-stable')"
+                                              th:text="${change > 0 ? '+' : ''} + ${#numbers.formatDecimal(change, 1, 1)} + ' kg'"></span>
+                                    </span>
+                                </span>
+                            </span>
+                            <span th:unless="${iter.index > 0}" class="text-muted">-</span>
+                        </td>
+                        <td th:text="${record.notes ?: '-'}"></td>
+                        <td class="text-center">
+                            <form th:action="@{/pets/{petId}/weight/{weightId}/delete(petId=${pet.id},weightId=${record.id})}" 
+                                  method="post" class="d-inline"
+                                  onsubmit="return confirm('Xóa bản ghi này?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${#lists.isEmpty(records)}" class="text-center py-5">
+        <div class="bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
+             style="width: 100px; height: 100px;">
+            <i class="bi bi-graph-up text-primary fs-1"></i>
+        </div>
+        <h5 class="text-muted">Chưa có bản ghi cân nặng</h5>
+        <p class="text-muted">Bắt đầu theo dõi cân nặng cho thú cưng của bạn</p>
+        <a th:href="@{/pets/{id}/weight/new(id=${pet.id})}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Thêm bản ghi cân nặng đầu tiên
+        </a>
+    </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+/* Weight Chart */
+document.addEventListener('DOMContentLoaded', function() {
+    const weightData = /*[[${chartData}]]*/ [];
+    
+    if (weightData && weightData.length > 0) {
+        const ctx = document.getElementById('weightChart').getContext('2d');
+        
+        // Calculate change indicators
+        let changes = [];
+        for (let i = 0; i < weightData.length; i++) {
+            if (i > 0) {
+                const change = parseFloat(weightData[i].weight) - parseFloat(weightData[i-1].weight);
+                changes.push(change);
+            } else {
+                changes.push(0);
+            }
+        }
+        
+        const pointColors = changes.map(c => c > 0 ? '#dc3545' : (c < 0 ? '#198754' : '#6c757d'));
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: weightData.map(w => new Date(w.recordDate).toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: '2-digit'})),
+                datasets: [{
+                    label: 'Cân nặng (kg)',
+                    data: weightData.map(w => parseFloat(w.weight)),
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: pointColors,
+                    pointBorderColor: pointColors
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            afterLabel: function(context) {
+                                const idx = context.dataIndex;
+                                if (idx > 0 && changes[idx] !== 0) {
+                                    const sign = changes[idx] > 0 ? '+' : '';
+                                    return 'Thay đổi: ' + sign + changes[idx].toFixed(1) + ' kg';
+                                }
+                                return '';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Cân nặng (kg)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

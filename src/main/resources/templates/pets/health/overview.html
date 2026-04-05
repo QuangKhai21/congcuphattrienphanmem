@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="|Hồ sơ sức khỏe - ${pet.name} - Pet Care|">Hồ sơ sức khỏe</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        .health-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .health-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .stat-card {
+            border-left: 4px solid;
+        }
+        .stat-medical { border-color: #dc3545; }
+        .stat-vaccination { border-color: #198754; }
+        .stat-weight { border-color: #0d6efd; }
+        .stat-appointment { border-color: #ffc107; }
+    </style>
+</head>
+<body class="theme-body">
+<div th:replace="~{fragments/nav :: nav ('/pets')}"></div>
+
+<main class="container py-4 site-main" style="margin-bottom: 4rem;">
+
+    <!-- Cùng template trang Sửa loài / form thú cưng: nút quay lại + h2 (không dùng breadcrumb riêng) -->
+    <div class="d-flex align-items-center mb-4">
+        <a th:href="@{/pets}" class="btn btn-outline-secondary me-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <h2 class="mb-0" th:text="|Hồ sơ sức khỏe — ${pet.name}|">Hồ sơ sức khỏe</h2>
+    </div>
+
+    <!-- Pet header — đồng bộ avatar với danh sách / trang con sức khỏe -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body py-3">
+            <div class="row align-items-center g-3">
+                <th:block th:replace="~{fragments/pet-health-subpage :: asideAndInfo(${pet}, false)}"/>
+                <div class="col-12 col-md-4 text-md-end">
+                    <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+                        <a th:href="@{/pets/{id}/medical-records(id=${pet.id})}" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-file-medical"></i> Hồ sơ bệnh án
+                        </a>
+                        <a th:href="@{/pets/{id}/vaccinations(id=${pet.id})}" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-shield-check"></i> Tiêm phòng
+                        </a>
+                        <a th:href="@{/pets/{id}/weight(id=${pet.id})}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-graph-up"></i> Cân nặng
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card health-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Hồ sơ bệnh án</h6>
+                            <h3 class="mb-0" th:text="${summary.totalMedicalRecords}">0</h3>
+                        </div>
+                        <div class="text-danger opacity-25">
+                            <i class="bi bi-file-earmark-medical fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card health-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Lịch tiêm phòng</h6>
+                            <h3 class="mb-0" th:text="${summary.totalVaccinations}">0</h3>
+                        </div>
+                        <div class="text-success opacity-25">
+                            <i class="bi bi-shield-check fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card health-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Bản ghi cân nặng</h6>
+                            <h3 class="mb-0" th:text="${summary.totalWeightRecords}">0</h3>
+                        </div>
+                        <div class="text-primary opacity-25">
+                            <i class="bi bi-graph-up fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card health-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Lịch hẹn</h6>
+                            <h3 class="mb-0" th:text="${summary.totalAppointments != null ? summary.totalAppointments : 0}">0</h3>
+                        </div>
+                        <div class="text-warning opacity-25">
+                            <i class="bi bi-calendar-event fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weight Chart & Latest Records -->
+    <div class="row g-4">
+        <!-- Weight Chart -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up text-primary"></i> Biểu đồ cân nặng</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="weightChart" height="200"></canvas>
+                    <p th:if="${#lists.isEmpty(summary.weightRecords)}" class="text-center text-muted py-5">
+                        <i class="bi bi-clipboard-x d-block fs-1 mb-2"></i>
+                        Chưa có dữ liệu cân nặng
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Latest Medical Record -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-medical text-danger"></i> Bệnh án gần nhất</h5>
+                </div>
+                <div class="card-body">
+                    <div th:if="${summary.latestMedicalRecord != null}">
+                        <table class="table table-sm mb-0">
+                            <tr>
+                                <th class="text-muted" style="width: 120px;">Ngày khám:</th>
+                                <td th:text="${#temporals.format(summary.latestMedicalRecord.recordDate, 'dd/MM/yyyy HH:mm')}"></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Chẩn đoán:</th>
+                                <td th:text="${summary.latestMedicalRecord.diagnosis}"></td>
+                            </tr>
+                            <tr th:if="${summary.latestMedicalRecord.symptoms}">
+                                <th class="text-muted">Triệu chứng:</th>
+                                <td th:text="${summary.latestMedicalRecord.symptoms}"></td>
+                            </tr>
+                            <tr th:if="${summary.latestMedicalRecord.treatment}">
+                                <th class="text-muted">Điều trị:</th>
+                                <td th:text="${summary.latestMedicalRecord.treatment}"></td>
+                            </tr>
+                            <tr th:if="${summary.latestMedicalRecord.prescription}">
+                                <th class="text-muted">Đơn thuốc:</th>
+                                <td th:text="${summary.latestMedicalRecord.prescription}"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <p th:unless="${summary.latestMedicalRecord != null}" class="text-center text-muted py-5">
+                        <i class="bi bi-clipboard-x d-block fs-1 mb-2"></i>
+                        Chưa có hồ sơ bệnh án
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vaccination Schedule -->
+    <div class="row g-4 mt-2">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-shield-check text-success"></i> Lịch tiêm phòng</h5>
+                    <a th:href="@{/pets/{id}/vaccinations/new(id=${pet.id})}" class="btn btn-sm btn-success">
+                        <i class="bi bi-plus"></i> Thêm lịch tiêm
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div th:if="${not #lists.isEmpty(summary.vaccinations)}">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Vaccine</th>
+                                    <th>Ngày tiêm</th>
+                                    <th>Nhắc lại</th>
+                                    <th>Ghi chú</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="v : ${summary.vaccinations}">
+                                    <td>
+                                        <span class="fw-medium" th:text="${v.vaccineName}"></span>
+                                        <span th:if="${v.vaccineType}" class="badge bg-light text-dark ms-1" 
+                                              th:text="${v.vaccineType}"></span>
+                                    </td>
+                                    <td th:text="${#temporals.format(v.vaccinationDate, 'dd/MM/yyyy')}"></td>
+                                    <td>
+                                        <span th:if="${v.nextDueDate}"
+                                              class="badge"
+                                              th:classappend="${@dateUtil.isBeforeNow(v.nextDueDate)} ? 'bg-danger' : 'bg-warning text-dark'"
+                                              th:text="${#temporals.format(v.nextDueDate, 'dd/MM/yyyy')}">
+                                        </span>
+                                        <span th:unless="${v.nextDueDate}" class="text-muted">-</span>
+                                    </td>
+                                    <td th:text="${v.notes ?: '-'}"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p th:unless="${not #lists.isEmpty(summary.vaccinations)}" class="text-center text-muted py-4 mb-0">
+                        <i class="bi bi-shield-x d-block fs-1 mb-2"></i>
+                        Chưa có lịch tiêm phòng
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+/* Weight Chart */
+document.addEventListener('DOMContentLoaded', function() {
+    const weightData = /*[[${summary.weightChartData}]]*/ [];
+    
+    if (weightData && weightData.length > 0) {
+        const ctx = document.getElementById('weightChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: weightData.map(w => new Date(w.recordDate).toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit'})),
+                datasets: [{
+                    label: 'Cân nặng (kg)',
+                    data: weightData.map(w => parseFloat(w.weight)),
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Cân nặng (kg)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

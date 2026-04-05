@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Dịch vụ thú cưng - Pet Clinic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav ('/services')}"></div>
+
+<div class="container py-4" style="margin-bottom: 4rem;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-geo-alt-fill text-primary"></i> Dịch vụ thú cưng</h2>
+        <a th:href="@{/services/nearby}" class="btn btn-primary">
+            <i class="bi bi-map"></i> Bản đồ
+        </a>
+    </div>
+
+    <!-- Service Type Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2 col-6 mb-3">
+            <a th:href="@{/services/pet-taxi}" class="text-decoration-none">
+                <div class="card text-center h-100 shadow-sm">
+                    <div class="card-body">
+                        <i class="bi bi-truck" style="font-size: 2rem; color: #0d6efd;"></i>
+                        <p class="mt-2 mb-0 small fw-bold">Pet Taxi</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <a th:href="@{/services(type='PET_SHOP')}" class="text-decoration-none">
+                <div class="card text-center h-100 shadow-sm">
+                    <div class="card-body">
+                        <i class="bi bi-bag" style="font-size: 2rem; color: #198754;"></i>
+                        <p class="mt-2 mb-0 small fw-bold">Pet Shop</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <a th:href="@{/services(type='SPA')}" class="text-decoration-none">
+                <div class="card text-center h-100 shadow-sm">
+                    <div class="card-body">
+                        <i class="bi bi-droplet" style="font-size: 2rem; color: #dc3545;"></i>
+                        <p class="mt-2 mb-0 small fw-bold">Spa &amp; Grooming</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <a th:href="@{/services(type='HOTEL')}" class="text-decoration-none">
+                <div class="card text-center h-100 shadow-sm">
+                    <div class="card-body">
+                        <i class="bi bi-building" style="font-size: 2rem; color: #ffc107;"></i>
+                        <p class="mt-2 mb-0 small fw-bold">Khách sạn</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <a th:href="@{/services/24h}" class="text-decoration-none">
+                <div class="card text-center h-100 shadow-sm">
+                    <div class="card-body">
+                        <i class="bi bi-clock" style="font-size: 2rem; color: #6610f2;"></i>
+                        <p class="mt-2 mb-0 small fw-bold">24/7</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <a th:href="@{/services}" class="text-decoration-none">
+                <div class="card text-center h-100 shadow-sm">
+                    <div class="card-body">
+                        <i class="bi bi-grid" style="font-size: 2rem; color: #6c757d;"></i>
+                        <p class="mt-2 mb-0 small fw-bold">Tất cả</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form th:action="@{/services}" method="get" class="row g-3">
+                <div class="col-md-6">
+                    <select name="type" class="form-select">
+                        <option value="">-- Tất cả loại dịch vụ --</option>
+                        <option th:each="t : ${serviceTypes}" th:value="${t}" th:text="${t.name().replace('_', ' ')}"
+                                th:selected="${selectedType == t}">Loại</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" name="keyword" class="form-control"
+                           placeholder="Tìm tên, địa chỉ..." th:value="${keyword}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Tìm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="row" th:if="${!services.isEmpty()}">
+        <div class="col-md-6 mb-4" th:each="service : ${services}">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h5 class="card-title mb-1">
+                                <i class="bi" th:classappend="${service.serviceType.name() == 'PET_TAXI' ? 'bi-truck' :
+                                    (service.serviceType.name() == 'PET_SHOP' ? 'bi-bag' :
+                                    (service.serviceType.name() == 'SPA' ? 'bi-droplet' :
+                                    (service.serviceType.name() == 'HOTEL' ? 'bi-building' :
+                                    (service.serviceType.name() == 'VET_CLINIC' ? 'bi-heart-pulse' :
+                                    (service.serviceType.name() == 'TRAINING' ? 'bi-mortarboard' : 'bi-shop'))))}"></i>
+                                <span th:text="${service.name}">Tên dịch vụ</span>
+                            </h5>
+                            <span class="badge bg-secondary" th:text="${service.serviceType?.name()?.replace('_', ' ') ?: '-'}">Loại</span>
+                            <span class="badge bg-success" th:if="${service.is24h}">24/7</span>
+                            <span class="badge bg-warning text-dark" th:if="${service.hasPickup}">Đón rước</span>
+                        </div>
+                        <div class="text-end" th:if="${service.rating != null and service.rating > 0}">
+                            <span class="text-warning"><i class="bi bi-star-fill"></i></span>
+                            <strong th:text="${service.rating}">5.0</strong>
+                            <small class="text-muted" th:text="'(' + (service.reviewCount ?: 0) + ')'">(0)</small>
+                        </div>
+                    </div>
+
+                    <p class="card-text small text-muted mb-2">
+                        <i class="bi bi-geo-alt text-danger"></i>
+                        <span th:text="${service.address ?: 'Chưa có địa chỉ'}">Địa chỉ</span>
+                    </p>
+
+                    <p class="card-text small mb-1" th:if="${service.phone != null and !service.phone.isBlank()}">
+                        <i class="bi bi-telephone text-primary"></i>
+                        <a th:href="@{'tel:' + ${service.phone}}" th:text="${service.phone}">Số điện thoại</a>
+                    </p>
+
+                    <p class="card-text small text-muted mb-0" th:if="${service.priceRange != null and !service.priceRange.isBlank()}">
+                        <i class="bi bi-currency-vnd"></i>
+                        <span th:text="${service.priceRange}">100.000 - 500.000</span>
+                    </p>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="d-flex gap-2">
+                        <a th:href="@{/services/detail/{id}(id=${service.id})}" class="btn btn-outline-primary btn-sm flex-fill">
+                            <i class="bi bi-info-circle"></i> Chi tiết
+                        </a>
+                        <a th:if="${service.phone != null and !service.phone.isBlank()}"
+                           th:href="@{'tel:' + ${service.phone}}" class="btn btn-success btn-sm">
+                            <i class="bi bi-telephone"></i> Gọi ngay
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info" th:if="${services.isEmpty()}">
+        <i class="bi bi-info-circle"></i> Không tìm thấy dịch vụ nào.
+    </div>
+
+    <!-- Pagination -->
+    <nav th:if="${totalPages > 1}" class="d-flex justify-content-center mt-4">
+        <ul class="pagination mb-0">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/services(page=${currentPage - 1}, type=${selectedType})}">
+                    <i class="bi bi-chevron-left"></i> Trước
+                </a>
+            </li>
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link" th:href="@{/services(page=${i}, type=${selectedType})}" th:text="${i + 1}">1</a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                <a class="page-link" th:href="@{/services(page=${currentPage + 1}, type=${selectedType})}">
+                    Sau <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

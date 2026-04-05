@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Thông tin cá nhân - Pet Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <style>
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #e9ecef;
+        }
+        .profile-avatar-placeholder {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav ('/profile')}"></div>
+
+<div class="container py-4" style="margin-bottom: 4rem;">
+    <div th:if="${success}" class="alert alert-success alert-dismissible">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-person-circle"></i> Thông tin cá nhân</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Avatar Section -->
+                    <div class="text-center mb-4">
+                        <div th:if="${user.avatarUrl != null and !#strings.isEmpty(user.avatarUrl)}"
+                             class="d-inline-block">
+                            <img th:src="@{${user.avatarUrl}}"
+                                 class="profile-avatar" alt="Avatar"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="profile-avatar-placeholder" style="display:none;"></div>
+                        </div>
+                        <div th:unless="${user.avatarUrl != null and !#strings.isEmpty(user.avatarUrl)}"
+                             class="profile-avatar-placeholder d-inline-flex">
+                            <span th:text="${#strings.substring(user.fullName, 0, 1)}">U</span>
+                        </div>
+                        <div class="mt-2">
+                            <h5 class="mb-0" th:text="${user.fullName}">Tên người dùng</h5>
+                            <small class="text-muted" th:text="${user.username}">@username</small>
+                        </div>
+                    </div>
+
+                    <!-- Info Fields -->
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="info-item p-3 bg-light rounded">
+                                <label class="form-label text-muted small mb-1">
+                                    <i class="bi bi-person"></i> Tên đầy đủ
+                                </label>
+                                <div class="fw-medium" th:text="${user.fullName}">-</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item p-3 bg-light rounded">
+                                <label class="form-label text-muted small mb-1">
+                                    <i class="bi bi-at"></i> Tên đăng nhập
+                                </label>
+                                <div class="fw-medium" th:text="${user.username}">-</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item p-3 bg-light rounded">
+                                <label class="form-label text-muted small mb-1">
+                                    <i class="bi bi-envelope"></i> Email
+                                </label>
+                                <div class="fw-medium" th:text="${user.email}">-</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item p-3 bg-light rounded">
+                                <label class="form-label text-muted small mb-1">
+                                    <i class="bi bi-telephone"></i> Số điện thoại
+                                </label>
+                                <div class="fw-medium" th:text="${user.phone ?: 'Chưa cập nhật'}">-</div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="info-item p-3 bg-light rounded">
+                                <label class="form-label text-muted small mb-1">
+                                    <i class="bi bi-house"></i> Địa chỉ
+                                </label>
+                                <div class="fw-medium" th:text="${user.address ?: 'Chưa cập nhật'}">-</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item p-3 bg-light rounded">
+                                <label class="form-label text-muted small mb-1">
+                                    <i class="bi bi-calendar-plus"></i> Ngày đăng ký
+                                </label>
+                                <div class="fw-medium" th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'dd/MM/yyyy') : '-'}">-</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item p-3 bg-light rounded">
+                                <label class="form-label text-muted small mb-1">
+                                    <i class="bi bi-clock-history"></i> Đăng nhập cuối
+                                </label>
+                                <div class="fw-medium" th:text="${user.lastLoginAt != null ? #temporals.format(user.lastLoginAt, 'dd/MM/yyyy HH:mm') : 'Chưa đăng nhập'}">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Button -->
+                    <div class="text-center mt-4">
+                        <a th:href="@{/profile/edit}" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Chỉnh sửa thông tin
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

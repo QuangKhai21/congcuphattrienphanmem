@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Dashboard - Pet Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="/"><i class="bi bi-heart-pulse-fill"></i> Pet Management</a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" th:href="@{/}">Trang chủ</a>
+            <a class="nav-link" th:href="@{/pets}">Thú cưng</a>
+            <a class="nav-link" th:href="@{/appointments}">Lịch hẹn</a>
+            <a class="nav-link" th:href="@{/products}">Sản phẩm</a>
+            <a class="nav-link" th:href="@{/logout}">Đăng xuất</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-4">
+    <h2>Dashboard</h2>
+    <p class="text-muted">Xin chào, <span sec:authentication="name">User</span></p>
+
+    <div class="row g-4 mt-2">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <i class="bi bi-people display-6"></i>
+                    <h5 class="mt-2">Thú cưng</h5>
+                    <a th:href="@{/pets}" class="text-white stretched-link">Quản lý →</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <i class="bi bi-calendar-check display-6"></i>
+                    <h5 class="mt-2">Lịch hẹn</h5>
+                    <a th:href="@{/appointments}" class="text-white stretched-link">Xem lịch →</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <i class="bi bi-box-seam display-6"></i>
+                    <h5 class="mt-2">Sản phẩm</h5>
+                    <a th:href="@{/products}" class="text-white stretched-link">Mua sắm →</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3" sec:authorize="hasRole('ADMIN')">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <i class="bi bi-gear display-6"></i>
+                    <h5 class="mt-2">Quản trị</h5>
+                    <a th:href="@{/products/admin/new}" class="text-dark stretched-link">Thêm sản phẩm →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

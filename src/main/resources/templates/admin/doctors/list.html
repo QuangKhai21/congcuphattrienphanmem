@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Quản lý bác sĩ - Pet Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<nav th:replace="~{admin/fragments/header :: navbar('doctors')}"></nav>
+<script th:src="@{/js/same-page-nav-guard.js}"></script>
+
+<div class="container py-4">
+    <h2 class="mb-4"><i class="bi bi-heart-pulse"></i> Quản lý bác sĩ</h2>
+
+    <!-- Alert -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}">Thành công</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}">Lỗi</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Nút Thêm bác sĩ -->
+    <div class="mb-3">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addVetModal">
+            <i class="bi bi-plus-lg"></i> Thêm bác sĩ
+        </button>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-3" id="doctorTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending-pane" type="button" role="tab">
+                <i class="bi bi-hourglass-split"></i> Chờ duyệt
+                <span th:if="${!#lists.isEmpty(pendingRequests)}"
+                      class="badge bg-warning text-dark ms-1"
+                      th:text="${#lists.size(pendingRequests)}">0</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="blocked-tab" data-bs-toggle="tab" data-bs-target="#blocked-pane" type="button" role="tab">
+                <i class="bi bi-slash-circle"></i> Bị chặn
+                <span th:if="${!#lists.isEmpty(blockedVets)}"
+                      class="badge bg-danger ms-1"
+                      th:text="${#lists.size(blockedVets)}">0</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="removed-tab" data-bs-toggle="tab" data-bs-target="#removed-pane" type="button" role="tab">
+                <i class="bi bi-x-octagon"></i> Bị hủy
+                <span th:if="${!#lists.isEmpty(removedVets)}"
+                      class="badge bg-secondary ms-1"
+                      th:text="${#lists.size(removedVets)}">0</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved-pane" type="button" role="tab">
+                <i class="bi bi-check-circle"></i> Đã duyệt
+                <span class="badge bg-success ms-1" th:text="${#lists.size(approvedVets)}">0</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="doctorTabContent">
+
+        <!-- ========== Tab Chờ duyệt ========== -->
+        <div class="tab-pane fade" id="pending-pane" role="tabpanel" aria-labelledby="pending-tab">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <strong><i class="bi bi-hourglass-split"></i> Yêu cầu đăng ký bác sĩ chờ duyệt</strong>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tài khoản</th>
+                                    <th>Họ tên</th>
+                                    <th>Email</th>
+                                    <th>Ngày gửi</th>
+                                    <th class="text-center">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="u : ${pendingRequests}">
+                                    <td th:text="${u.id}">1</td>
+                                    <td><strong th:text="${u.username}">username</strong></td>
+                                    <td th:text="${u.fullName}">Họ tên</td>
+                                    <td th:text="${u.email}">email</td>
+                                    <td th:text="${#temporals.format(u.updatedAt, 'dd/MM/yyyy HH:mm')}">Ngày</td>
+                                    <td class="text-center">
+                                        <!-- Duyệt -->
+                                        <form th:action="@{/admin/doctors/approve}" method="post" class="d-inline">
+                                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                            <input type="hidden" name="userId" th:value="${u.id}"/>
+                                            <button type="submit" class="btn btn-sm btn-success"
+                                                    onclick="return confirm('Duyệt tài khoản này làm bác sĩ?')"
+                                                    title="Duyệt">
+                                                <i class="bi bi-check-lg"></i> Duyệt
+                                            </button>
+                                        </form>
+                                        <!-- Từ chối -->
+                                        <button type="button" class="btn btn-sm btn-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#rejectModal"
+                                                th:data-user-id="${u.id}"
+                                                title="Từ chối">
+                                            <i class="bi bi-x-lg"></i> Từ chối
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(pendingRequests)}">
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                                        Không có yêu cầu nào đang chờ duyệt
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== Tab Bị chặn ========== -->
+        <div class="tab-pane fade" id="blocked-pane" role="tabpanel" aria-labelledby="blocked-tab">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <strong><i class="bi bi-slash-circle"></i> Tài khoản bị chặn đăng ký bác sĩ</strong>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tài khoản</th>
+                                    <th>Họ tên</th>
+                                    <th>Email</th>
+                                    <th>Lý do / Ghi chú</th>
+                                    <th class="text-center" style="min-width: 10rem">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="u : ${blockedVets}">
+                                    <td th:text="${u.id}">1</td>
+                                    <td><strong th:text="${u.username}">username</strong></td>
+                                    <td th:text="${u.fullName}">Họ tên</td>
+                                    <td th:text="${u.email}">email</td>
+                                    <td>
+                                        <span th:if="${u.vetRequestNote != null and !u.vetRequestNote.isBlank()}"
+                                              class="text-danger small"
+                                              th:text="${u.vetRequestNote}">Lý do</span>
+                                        <span th:unless="${u.vetRequestNote != null and !u.vetRequestNote.isBlank()}"
+                                              class="text-muted">—</span>
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <form th:action="@{/admin/doctors/unblock}" method="post">
+                                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                            <input type="hidden" name="userId" th:value="${u.id}"/>
+                                            <button type="submit" class="btn btn-sm btn-success w-100"
+                                                    onclick="return confirm('Mở chặn đăng ký bác sĩ cho tài khoản này? Sau đó có thể Thêm bác sĩ lại hoặc để tài khoản tự đăng ký.')"
+                                                    title="Mở chặn đăng ký bác sĩ">
+                                                <i class="bi bi-unlock"></i> Mở đăng ký
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(blockedVets)}">
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="bi bi-check-all fs-4 d-block mb-2"></i>
+                                        Không có tài khoản nào bị chặn
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== Tab Bị hủy ========== -->
+        <div class="tab-pane fade" id="removed-pane" role="tabpanel" aria-labelledby="removed-tab">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <strong><i class="bi bi-x-octagon"></i> Tài khoản đã bị hủy bác sĩ</strong>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tài khoản</th>
+                                    <th>Họ tên</th>
+                                    <th>Email</th>
+                                    <th>Chuyên môn</th>
+                                    <th>Phòng khám</th>
+                                    <th class="text-center" style="min-width: 10rem">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="u : ${removedVets}">
+                                    <td th:text="${u.id}">1</td>
+                                    <td><strong th:text="${u.username}">username</strong></td>
+                                    <td th:text="${u.fullName}">Họ tên</td>
+                                    <td th:text="${u.email}">email</td>
+                                    <td th:text="${u.specialization != null ? u.specialization : '-'}">Chuyên môn</td>
+                                    <td th:text="${u.clinicName != null ? u.clinicName : '-'}">Phòng khám</td>
+                                    <td class="text-center align-middle">
+                                        <form th:action="@{/admin/doctors/restore}" method="post">
+                                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                            <input type="hidden" name="userId" th:value="${u.id}"/>
+                                            <button type="submit" class="btn btn-sm btn-success w-100"
+                                                    onclick="return confirm('Thêm lại bác sĩ cho tài khoản này?')"
+                                                    title="Thêm lại bác sĩ">
+                                                <i class="bi bi-plus-circle"></i> Thêm lại
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(removedVets)}">
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="bi bi-check-all fs-4 d-block mb-2"></i>
+                                        Không có tài khoản nào bị hủy
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== Tab Đã duyệt ========== -->
+        <div class="tab-pane fade show active" id="approved-pane" role="tabpanel" aria-labelledby="approved-tab">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <strong><i class="bi bi-check-circle"></i> Danh sách bác sĩ đã duyệt</strong>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tài khoản</th>
+                                    <th>Họ tên</th>
+                                    <th>Email</th>
+                                    <th>Chuyên môn</th>
+                                    <th>Phòng khám</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-center" style="min-width: 12rem">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="u : ${approvedVets}">
+                                    <td th:text="${u.id}">1</td>
+                                    <td><strong th:text="${u.username}">username</strong></td>
+                                    <td th:text="${u.fullName}">Họ tên</td>
+                                    <td th:text="${u.email}">email</td>
+                                    <td th:text="${u.specialization != null ? u.specialization : '-'}">Chuyên môn</td>
+                                    <td th:text="${u.clinicName != null ? u.clinicName : '-'}">Phòng khám</td>
+                                    <td>
+                                        <span th:if="${u.isVet}" class="badge bg-success">Đang hoạt động</span>
+                                        <span th:unless="${u.isVet}" class="badge bg-danger">Đã chặn đăng ký</span>
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <div th:if="${u.isVet}" class="d-grid gap-2 mx-auto" style="max-width: 12rem">
+                                            <form th:action="@{/admin/doctors/remove}" method="post">
+                                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                                <input type="hidden" name="userId" th:value="${u.id}"/>
+                                                <button type="submit" class="btn btn-sm btn-warning w-100"
+                                                        onclick="return confirm('Hủy bác sĩ cho tài khoản này? Tài khoản sẽ quay lại vai trò khách hàng và có thể đăng ký lại sau.')"
+                                                        title="Hủy bác sĩ">
+                                                    <i class="bi bi-x-circle"></i> Hủy bác sĩ
+                                                </button>
+                                            </form>
+                                            <form th:action="@{/admin/doctors/block}" method="post">
+                                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                                <input type="hidden" name="userId" th:value="${u.id}"/>
+                                                <button type="submit" class="btn btn-sm btn-danger w-100"
+                                                        onclick="return confirm('Chặn tài khoản này không được đăng ký làm bác sĩ? Hồ sơ bác sĩ sẽ bị gỡ khỏi web; tài khoản vẫn nằm trong danh sách để bạn có thể mở chặn sau.')"
+                                                        title="Chặn đăng ký bác sĩ">
+                                                    <i class="bi bi-slash-circle"></i> Chặn đăng ký
+                                                </button>
+                                            </form>
+                                        </div>
+                                        <div th:unless="${u.isVet}" class="d-grid gap-2 mx-auto" style="max-width: 12rem">
+                                            <form th:action="@{/admin/doctors/unblock}" method="post">
+                                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                                <input type="hidden" name="userId" th:value="${u.id}"/>
+                                                <button type="submit" class="btn btn-sm btn-success w-100"
+                                                        onclick="return confirm('Mở chặn đăng ký bác sĩ cho tài khoản này?')"
+                                                        title="Mở chặn đăng ký bác sĩ">
+                                                    <i class="bi bi-unlock"></i> Mở chặn đăng ký
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(approvedVets)}">
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        <i class="bi bi-person-x fs-4 d-block mb-2"></i>
+                                        Chưa có bác sĩ nào được duyệt
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a th:href="@{/admin}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Quay lại Dashboard</a>
+    </div>
+</div>
+
+<!-- ========== Modal Thêm bác sĩ ========== -->
+<div class="modal fade" id="addVetModal" tabindex="-1" aria-labelledby="addVetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form th:action="@{/admin/doctors/add}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addVetModalLabel">
+                        <i class="bi bi-plus-circle"></i> Thêm bác sĩ
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <div class="mb-3">
+                        <label for="usernameOrEmail" class="form-label">
+                            Tài khoản hoặc Email <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" id="usernameOrEmail" name="usernameOrEmail"
+                               class="form-control"
+                               placeholder="Nhập tên đăng nhập hoặc email"
+                               required/>
+                        <div class="form-text">
+                            Nhập <strong>tên đăng nhập</strong> (tài khoản thường) hoặc <strong>email</strong> (tài khoản Google).
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus-lg"></i> Thêm bác sĩ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ========== Modal Từ chối ========== -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form th:action="@{/admin/doctors/reject}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger" id="rejectModalLabel">
+                        <i class="bi bi-x-circle"></i> Từ chối đăng ký bác sĩ
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <input type="hidden" id="rejectUserId" name="userId" value=""/>
+                    <p>Tài khoản sẽ bị <strong>chặn đăng ký làm bác sĩ</strong> sau khi từ chối.</p>
+                    <div class="mb-3">
+                        <label for="rejectNote" class="form-label">Lý do từ chối (tùy chọn)</label>
+                        <textarea id="rejectNote" name="note" class="form-control" rows="3"
+                                  placeholder="Nhập lý do từ chối..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-lg"></i> Xác nhận từ chối
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Script truyền userId vào modal từ chối -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var rejectModal = document.getElementById('rejectModal');
+        rejectModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var userId = button.getAttribute('data-user-id');
+            document.getElementById('rejectUserId').value = userId;
+        });
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
