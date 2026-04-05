@@ -1,6 +1,8 @@
 package com.db7.j2ee_quanlythucung.config;
 
 import com.db7.j2ee_quanlythucung.security.CustomUserDetailsService;
+import com.db7.j2ee_quanlythucung.security.OAuth2LoginFailureHandler;
+import com.db7.j2ee_quanlythucung.security.OAuth2LoginSuccessHandler;
 import com.db7.j2ee_quanlythucung.security.RoleBasedAuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +25,8 @@ import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+    private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
     private final PasswordEncoder passwordEncoder;
     private final RoleBasedAuthenticationSuccessHandler roleBasedAuthSuccessHandler;
 
@@ -94,6 +98,12 @@ public class SecurityConfig {
             .formLogin(form -> form
                 .loginPage("/login")
                 .successHandler(roleBasedAuthSuccessHandler)
+                .permitAll()
+            )
+            .oauth2Login(oauth2 -> oauth2
+                .loginPage("/login")
+                .failureHandler(oAuth2LoginFailureHandler)
+                .successHandler(oAuth2LoginSuccessHandler)
                 .permitAll()
             )
             .logout(logout -> logout
