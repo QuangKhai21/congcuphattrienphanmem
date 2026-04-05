@@ -56,7 +56,8 @@ public class SecurityConfig {
                 // /logout：匿名访问时不能再要求 authenticated，否则登出后或 GET /logout 会 403
                 .requestMatchers("/", "/login", "/logout", "/register", "/forgot-password", "/reset-password",
                     "/oauth2/**", "/login/oauth2/**",
-                    "/css/**", "/js/**", "/images/**", "/img/**", "/uploads/**", "/h2-console/**", "/error").permitAll()
+                    "/css/**", "/js/**", "/images/**", "/img/**", "/uploads/**", "/h2-console/**", "/error",
+                    "/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers("/admin/**").hasAnyRole("ADMIN")
                 .requestMatchers("/products/admin/**").hasAnyRole("ADMIN")
                 .requestMatchers("/products").permitAll()
