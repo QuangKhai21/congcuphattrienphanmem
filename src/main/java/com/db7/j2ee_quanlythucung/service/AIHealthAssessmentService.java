@@ -163,28 +163,66 @@ public class AIHealthAssessmentService {
         int n = points.size();
 
         if (n < 2) {
-            List<String> lbl = new ArrayList<>();
-            List<Double> val = new ArrayList<>();
-            for (TrendPoint p : points) {
-                lbl.add(p.time().format(chartTimeFmt));
-                val.add(p.value());
+            // WEIGHT fallback: dùng cân nặng hồ sơ pet làm 2 điểm giả nếu có dữ liệu
+            if (type == MetricType.WEIGHT) {
+                double profileWeight = parseWeightKg(pet.getWeight());
+                if (!Double.isNaN(profileWeight)) {
+                    LocalDateTime now = LocalDateTime.now();
+                    // 2 điểm giả: 7 ngày trước và hiện tại (cùng giá trị)
+                    points.add(new TrendPoint(now.minusDays(7), profileWeight));
+                    points.add(new TrendPoint(now, profileWeight));
+                    points.sort(Comparator.comparing(TrendPoint::time));
+                    n = 2;
+                }
             }
-            String hint = n == 0
-                    ? (type == MetricType.WEIGHT
-                            ? "Chưa có điểm cân nặng trong khoảng thời gian này. Ghi nhận cân tại mục Cân nặng của thú cưng hoặc chỉ số WEIGHT ở trang sức khỏe."
-                            : "Chưa có chỉ số nào trong khoảng thời gian này. Hãy ghi nhận thêm trên trang chi tiết sức khỏe.")
-                    : "Cần ít nhất 2 điểm dữ liệu để vẽ biểu đồ và phân tích xu hướng.";
+
+            // Nếu vẫn không đủ sau fallback
+            if (n < 2) {
+                List<String> lbl = new ArrayList<>();
+                List<Double> val = new ArrayList<>();
+                for (TrendPoint p : points) {
+                    lbl.add(p.time().format(chartTimeFmt));
+                    val.add(p.value());
+                }
+                String hint = n == 0
+                        ? (type == MetricType.WEIGHT
+                                ? "Chưa có điểm cân nặng trong khoảng thời gian này. Ghi nhận cân tại mục Cân nặng của thú cưng hoặc chỉ số WEIGHT ở trang sức khỏe."
+                                : "Chưa có chỉ số nào trong khoảng thời gian này. Hãy ghi nhận thêm trên trang chi tiết sức khỏe.")
+                        : "Cần ít nhất 2 điểm dữ liệu để vẽ biểu đồ và phân tích xu hướng.";
+                return HealthTrend.builder()
+                        .type(type)
+                        .trend("INSUFFICIENT_DATA")
+                        .message(hint)
+                        .changePercent(0.0)
+                        .firstValue(n == 0 ? 0.0 : points.get(0).value())
+                        .lastValue(n == 0 ? 0.0 : points.get(n - 1).value())
+                        .average(points.stream().mapToDouble(TrendPoint::value).average().orElse(0))
+                        .dataPoints(n)
+                        .chartLabels(List.copyOf(lbl))
+                        .chartValues(List.copyOf(val))
+                        .build();
+            }
+
+            // Ghi chú fallback: dùng dữ liệu hồ sơ
+            List<String> lblFallback = points.stream()
+                    .map(p -> p.time().format(chartTimeFmt))
+                    .toList();
+            List<Double> valFallback = points.stream()
+                    .map(TrendPoint::value)
+                    .toList();
+            double first = points.get(0).value();
+            double last = points.get(n - 1).value();
             return HealthTrend.builder()
                     .type(type)
-                    .trend("INSUFFICIENT_DATA")
-                    .message(hint)
+                    .trend("STABLE")
+                    .message("📊 Dữ liệu từ hồ sơ cân nặng (" + first + " kg). Ghi nhận cân thường xuyên để theo dõi xu hướng thực tế.")
                     .changePercent(0.0)
-                    .firstValue(n == 0 ? 0.0 : points.get(0).value())
-                    .lastValue(n == 0 ? 0.0 : points.get(n - 1).value())
-                    .average(points.stream().mapToDouble(TrendPoint::value).average().orElse(0))
+                    .firstValue(first)
+                    .lastValue(last)
+                    .average(first)
                     .dataPoints(n)
-                    .chartLabels(List.copyOf(lbl))
-                    .chartValues(List.copyOf(val))
+                    .chartLabels(lblFallback)
+                    .chartValues(valFallback)
                     .build();
         }
 
