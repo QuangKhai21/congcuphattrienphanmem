@@ -13,9 +13,5 @@ WORKDIR /app
 
 COPY --from=builder /app/build/libs/*.jar app.jar
 
-# Tạm dùng H2 (không cần MySQL) — bật railway profile khi đã kết nối MySQL
-# ENV SPRING_PROFILES_ACTIVE=railway
-
-# Railway injects PORT at runtime; Spring reads it via application.properties
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Xmx256m", "-Xms128m", "-jar", "app.jar"]
