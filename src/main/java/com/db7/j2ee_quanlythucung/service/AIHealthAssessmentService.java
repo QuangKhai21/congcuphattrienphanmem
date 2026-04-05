@@ -3,12 +3,15 @@ package com.db7.j2ee_quanlythucung.service;
 import com.db7.j2ee_quanlythucung.entity.HealthMetric;
 import com.db7.j2ee_quanlythucung.entity.HealthMetric.MetricType;
 import com.db7.j2ee_quanlythucung.entity.Pet;
+import com.db7.j2ee_quanlythucung.entity.WeightRecord;
 import com.db7.j2ee_quanlythucung.repository.HealthMetricRepository;
+import com.db7.j2ee_quanlythucung.repository.WeightRecordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
 public class AIHealthAssessmentService {
 
     private final HealthMetricRepository healthMetricRepository;
+    private final WeightRecordRepository weightRecordRepository;
 
     private static final Map<MetricType, double[]> NORMAL_RANGES = new EnumMap<>(MetricType.class);
     private static final Map<String, Double> PET_CATEGORY_WEIGHTS = new HashMap<>();
@@ -150,37 +154,42 @@ public class AIHealthAssessmentService {
     }
 
     public HealthTrend analyzeTrend(Pet pet, MetricType type, int days) {
-        LocalDateTime since = LocalDateTime.now().minusDays(days);
-        List<HealthMetric> metrics = healthMetricRepository
-                .findByPetAndTypeInDateRange(pet.getId(), type, since, LocalDateTime.now());
-
+        int safeDays = Math.max(1, days);
+        LocalDateTime end = LocalDateTime.now();
+        LocalDateTime start = end.minusDays(safeDays);
         DateTimeFormatter chartTimeFmt = DateTimeFormatter.ofPattern("dd/MM HH:mm");
 
-        if (metrics.size() < 2) {
+        List<TrendPoint> points = collectTrendPoints(pet, type, start, end);
+        int n = points.size();
+
+        if (n < 2) {
             List<String> lbl = new ArrayList<>();
             List<Double> val = new ArrayList<>();
-            for (HealthMetric m : metrics) {
-                lbl.add(m.getRecordedAt().format(chartTimeFmt));
-                val.add(m.getValue());
+            for (TrendPoint p : points) {
+                lbl.add(p.time().format(chartTimeFmt));
+                val.add(p.value());
             }
+            String hint = n == 0
+                    ? (type == MetricType.WEIGHT
+                            ? "Chưa có điểm cân nặng trong khoảng thời gian này. Ghi nhận cân tại mục Cân nặng của thú cưng hoặc chỉ số WEIGHT ở trang sức khỏe."
+                            : "Chưa có chỉ số nào trong khoảng thời gian này. Hãy ghi nhận thêm trên trang chi tiết sức khỏe.")
+                    : "Cần ít nhất 2 điểm dữ liệu để vẽ biểu đồ và phân tích xu hướng.";
             return HealthTrend.builder()
                     .type(type)
                     .trend("INSUFFICIENT_DATA")
-                    .message(metrics.isEmpty()
-                            ? "Chưa có chỉ số nào trong khoảng thời gian này. Hãy ghi nhận thêm trên trang chi tiết sức khỏe."
-                            : "Cần ít nhất 2 điểm dữ liệu để vẽ biểu đồ và phân tích xu hướng.")
+                    .message(hint)
                     .changePercent(0.0)
-                    .firstValue(metrics.isEmpty() ? 0.0 : metrics.get(0).getValue())
-                    .lastValue(metrics.isEmpty() ? 0.0 : metrics.get(metrics.size() - 1).getValue())
-                    .average(metrics.stream().mapToDouble(HealthMetric::getValue).average().orElse(0))
-                    .dataPoints(metrics.size())
+                    .firstValue(n == 0 ? 0.0 : points.get(0).value())
+                    .lastValue(n == 0 ? 0.0 : points.get(n - 1).value())
+                    .average(points.stream().mapToDouble(TrendPoint::value).average().orElse(0))
+                    .dataPoints(n)
                     .chartLabels(List.copyOf(lbl))
                     .chartValues(List.copyOf(val))
                     .build();
         }
 
-        double first = metrics.get(0).getValue();
-        double last = metrics.get(metrics.size() - 1).getValue();
+        double first = points.get(0).value();
+        double last = points.get(n - 1).value();
         double change = first != 0 ? ((last - first) / first) * 100 : 0;
 
         String trend;
@@ -194,11 +203,11 @@ public class AIHealthAssessmentService {
 
         String message = generateTrendMessage(type, trend, change, last);
 
-        List<String> chartLabels = metrics.stream()
-                .map(m -> m.getRecordedAt().format(chartTimeFmt))
+        List<String> chartLabels = points.stream()
+                .map(p -> p.time().format(chartTimeFmt))
                 .toList();
-        List<Double> chartValues = metrics.stream()
-                .map(HealthMetric::getValue)
+        List<Double> chartValues = points.stream()
+                .map(TrendPoint::value)
                 .toList();
 
         return HealthTrend.builder()
@@ -208,12 +217,44 @@ public class AIHealthAssessmentService {
                 .changePercent(Math.round(change * 10) / 10.0)
                 .firstValue(first)
                 .lastValue(last)
-                .average(metrics.stream().mapToDouble(HealthMetric::getValue).average().orElse(0))
-                .dataPoints(metrics.size())
+                .average(points.stream().mapToDouble(TrendPoint::value).average().orElse(0))
+                .dataPoints(n)
                 .chartLabels(chartLabels)
                 .chartValues(chartValues)
                 .build();
     }
+
+    private List<TrendPoint> collectTrendPoints(Pet pet, MetricType type, LocalDateTime start, LocalDateTime end) {
+        List<TrendPoint> out = new ArrayList<>();
+        if (type == MetricType.WEIGHT) {
+            LocalDate startDate = start.toLocalDate();
+            for (WeightRecord w : weightRecordRepository.findByPetIdAndRecordDateGreaterThanEqualOrderByRecordDateAsc(
+                    pet.getId(), startDate)) {
+                double kg = parseWeightKg(w.getWeight());
+                if (!Double.isNaN(kg)) {
+                    out.add(new TrendPoint(w.getRecordDate().atStartOfDay(), kg));
+                }
+            }
+        }
+        for (HealthMetric m : healthMetricRepository.findByPetAndTypeInDateRange(pet.getId(), type, start, end)) {
+            out.add(new TrendPoint(m.getRecordedAt(), m.getValue()));
+        }
+        out.sort(Comparator.comparing(TrendPoint::time));
+        return out;
+    }
+
+    private static double parseWeightKg(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return Double.NaN;
+        }
+        try {
+            return Double.parseDouble(raw.trim().replace(',', '.'));
+        } catch (NumberFormatException e) {
+            return Double.NaN;
+        }
+    }
+
+    private record TrendPoint(LocalDateTime time, double value) {}
 
     public NutritionAdvice generateNutritionAdvice(Pet pet, List<HealthMetric> recentMetrics) {
         double avgWeight = recentMetrics.stream()

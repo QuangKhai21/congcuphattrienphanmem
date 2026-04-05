@@ -32,6 +32,6 @@ class HealthTrendEndpointIT {
                 .andExpect(jsonPath("$.trend").exists())
                 .andExpect(jsonPath("$.chartLabels").isArray())
                 .andExpect(jsonPath("$.chartValues").isArray())
-                .andExpect(jsonPath("$.dataPoints").value(4));
+                .andExpect(jsonPath("$.dataPoints").value(5));
     }
 }

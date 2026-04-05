@@ -287,10 +287,37 @@
     .alert-badge { animation: pulse 2s infinite; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script th:inline="none">
 /* ── Health Trends & Nutrition Dashboard ── */
 (function() {
+    /** Chart.js tải động (tránh race / CDN chặn → ReferenceError "Chart is not defined") */
+    function ensureChartJs(done) {
+        if (typeof window.Chart === 'function') {
+            done();
+            return;
+        }
+        var urls = [
+            'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js',
+            'https://unpkg.com/chart.js@4.4.1/dist/chart.umd.min.js'
+        ];
+        var i = 0;
+        function tryNext() {
+            if (i >= urls.length) {
+                console.warn('Chart.js: không tải được từ CDN');
+                done();
+                return;
+            }
+            var s = document.createElement('script');
+            s.src = urls[i++];
+            s.async = true;
+            s.crossOrigin = 'anonymous';
+            s.onload = function() { done(); };
+            s.onerror = tryNext;
+            document.head.appendChild(s);
+        }
+        tryNext();
+    }
+
     function getHealthBase() {
         var el = document.getElementById('healthTrendsSection');
         var b = el && el.getAttribute('data-health-base');
@@ -375,6 +402,9 @@
             var panel = document.getElementById('trendAnalysisPanel');
             if (panel) {
                 var hint = err && err.message ? err.message : '';
+                if (hint.indexOf('Chart') >= 0 && hint.indexOf('not defined') >= 0) {
+                    hint = 'Thư viện biểu đồ chưa tải xong. Hãy tải lại trang hoặc kiểm tra mạng.';
+                }
                 panel.innerHTML = '<div class="text-center text-danger py-4 small"><i class="bi bi-exclamation-triangle"></i> Không tải được dữ liệu xu hướng' +
                     (hint ? '<br/><span class="text-muted" style="font-size:0.7rem;">' + escHtml(hint) + '</span>' : '') + '</div>';
             }
@@ -382,7 +412,7 @@
     };
 
     function renderTrendChart(data, metric, metricLabels) {
-        if (typeof Chart === 'undefined') {
+        if (typeof window.Chart !== 'function') {
             showTrendEmpty();
             return;
         }
@@ -418,7 +448,7 @@
 
         var dsLabel = (metricLabels && metricLabels[metric]) ? metricLabels[metric] : metric;
 
-        trendChart = new Chart(ctx, {
+        trendChart = new window.Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
@@ -626,9 +656,10 @@
     /* ── INIT ──────────────────────────────── */
     var hasPets = document.getElementById('healthTrendsSection') || document.getElementById('nutritionSection');
     if (hasPets) {
-        // Auto-load for first pet
-        loadTrendChart();
-        loadNutrition();
+        ensureChartJs(function() {
+            loadTrendChart();
+            loadNutrition();
+        });
     }
 })();
 </script>

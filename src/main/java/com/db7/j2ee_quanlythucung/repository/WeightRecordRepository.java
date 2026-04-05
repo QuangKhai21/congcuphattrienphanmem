@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +14,8 @@ import java.util.Optional;
 public interface WeightRecordRepository extends JpaRepository<WeightRecord, Long> {
 
     List<WeightRecord> findByPetIdOrderByRecordDateAsc(Long petId);
+
+    List<WeightRecord> findByPetIdAndRecordDateGreaterThanEqualOrderByRecordDateAsc(Long petId, LocalDate since);
 
     @Query("SELECT w FROM WeightRecord w WHERE w.pet.owner.id = :ownerId ORDER BY w.recordDate DESC")
     List<WeightRecord> findByOwnerId(@Param("ownerId") Long ownerId);
